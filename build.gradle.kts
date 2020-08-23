@@ -8,13 +8,14 @@ version = "1.0"
 
 repositories {
     jcenter()
+    maven { setUrl("https://repo.codemc.org/repository/nms/") }
 }
 
 dependencies {
     compileOnly("org.projectlombok:lombok:1.18.8")
     annotationProcessor("org.projectlombok:lombok:1.18.8")
 
-    compileOnly(fileTree("lib"))
+    compileOnly(fileTree("./lib"))
 }
 
 tasks {
