@@ -43,13 +43,15 @@ public abstract class Storage<T extends DataBody> implements Loadable, Saveable,
 
     public abstract boolean accepts(Class clazz);
 
-    @SneakyThrows
     protected  <B extends T> Constructor<B> getConstructor(Class<B> clazz) {
         return (Constructor<B>) constructorMap.computeIfAbsent(clazz, key -> {
-            Constructor<B> constructor = clazz.getDeclaredConstructor();
-            Preconditions.checkArgument(constructor != null, "Failed to find constructor for " + clazz.getSimpleName());
-            constructor.setAccessible(true);
-            return constructor;
+            try {
+                Constructor<B> constructor = clazz.getDeclaredConstructor();
+                constructor.setAccessible(true);
+                return constructor;
+            } catch (Exception exception) {
+                throw new IllegalStateException("Failed to find constructor for " + clazz.getSimpleName());
+            }
         });
     }
 }
