@@ -51,7 +51,7 @@ publishing {
 
     publications {
         register("mavenJava", MavenPublication::class) {
-            val directory = File("/out/")
+            val directory = File("${project.projectDir}/out/")
             artifact(directory.listFiles()[0]!!)
             groupId = "com.oop"
             artifactId = "data"
