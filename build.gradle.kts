@@ -1,6 +1,6 @@
 plugins {
     java
-    id("com.github.johnrengelman.shadow")
+    id("com.github.johnrengelman.shadow") version "4.0.4"
     `maven-publish`
 }
 
