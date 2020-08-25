@@ -69,16 +69,15 @@ public abstract class MultiFileStorage<T extends FlatDataBody> extends FileStora
                     BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
                     JsonObject jsonObject = prettifiedGson.fromJson(reader, JsonObject.class);
                     reader.close();
-
                     if (jsonObject == null) continue;
 
                     SerializedData data = new SerializedData(jsonObject);
-                    Optional<SerializedData> type = data.getChildren("type");
+                    Optional<SerializedData> type = data.getChildren(getTypeVar());
                     if (!type.isPresent())
                         throw new IllegalAccessException("Failed to find type in serialized data. Data is outdated!");
 
                     Class<? extends T> clazz = getVariants().get(type.get().applyAs());
-                    Constructor<? extends T> constructor = getConstructor(clazz);
+                    Constructor<? extends T> constructor = getConstructor(Objects.requireNonNull(clazz, "Failed to find clazz for serialized type: " + type.get().applyAs()));
 
                     T object = constructor.newInstance();
                     object.deserialize(data);
@@ -86,7 +85,7 @@ public abstract class MultiFileStorage<T extends FlatDataBody> extends FileStora
                     handlers.put(object, new ObjectHandler<>(object, file));
                     onAdd(object);
                 } catch (Throwable throwable) {
-                    throw new IllegalStateException("Failed to load object at file: " + file.getName());
+                    throw new IllegalStateException("Failed to load object at file: " + file.getParentFile().getName() + "/" + file.getName(), throwable);
                 }
             }
             if (callback != null)
@@ -131,6 +130,8 @@ public abstract class MultiFileStorage<T extends FlatDataBody> extends FileStora
 
                 SerializedData data = new SerializedData();
                 object.serialize(data);
+
+                data.write(getTypeVar(), object.getSerializedType());
 
                 BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
                 prettifiedGson.toJson(data.getJsonElement(), writer);

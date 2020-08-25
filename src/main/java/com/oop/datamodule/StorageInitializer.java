@@ -49,7 +49,6 @@ public class StorageInitializer {
     private Consumer<GsonBuilder> onBuild;
 
     private Map<Class<?>, AdapterObject<?>> adapters = new HashMap<>();
-
     private Gson gson;
 
     private StorageInitializer() {}

@@ -10,5 +10,9 @@ public abstract class FileStorage<T extends FlatDataBody> extends Storage<T> {
         super(storageHolder);
     }
 
+    public static String getTypeVar() {
+        return "%%TYPE%%";
+    }
+
     public abstract Map<String, Class<? extends T>> getVariants();
 }

@@ -13,6 +13,7 @@ import com.oop.datamodule.database.TableCreator;
 import com.oop.datamodule.database.TableEditor;
 import com.oop.datamodule.util.DataPair;
 import com.oop.datamodule.util.DataUtil;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
@@ -30,7 +31,8 @@ public abstract class SqlStorage<T extends SqlDataBody> extends Storage<T> {
     
     @NonNull
     private final Map<String, BodyCache> dataCache = new ConcurrentHashMap<>();
-    
+
+    @Getter
     private DatabaseWrapper database;
 
     public SqlStorage(StorageHolder storageHolder, DatabaseWrapper database) {

@@ -11,6 +11,7 @@ import com.oop.datamodule.body.FlatDataBody;
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -67,12 +68,12 @@ public abstract class SingleFileStorage<T extends FlatDataBody> extends FileStor
                 for (JsonElement data : array) {
                     if (data.isJsonObject()) {
                         SerializedData serializedData = new SerializedData(data.getAsJsonObject());
-                        Optional<SerializedData> type = serializedData.getChildren("type");
+                        Optional<SerializedData> type = serializedData.getChildren(getTypeVar());
                         if (!type.isPresent())
                             throw new IllegalAccessException("Failed to find type in serialized data. Data is outdated!");
 
                         Class<? extends T> clazz = getVariants().get(type.get().applyAs());
-                        Constructor<? extends T> constructor = getConstructor(clazz);
+                        Constructor<? extends T> constructor = getConstructor(Objects.requireNonNull(clazz, "Failed to find clazz for serialized type: " + type.get().applyAs()));
 
                         T object = constructor.newInstance();
                         object.deserialize(serializedData);
@@ -106,6 +107,8 @@ public abstract class SingleFileStorage<T extends FlatDataBody> extends FileStor
                 for (T object : this) {
                     SerializedData data = new SerializedData();
                     object.serialize(data);
+
+                    data.write(getTypeVar(), object.getSerializedType());
                     allSerializedData.add(data.getJsonElement());
                 }
 

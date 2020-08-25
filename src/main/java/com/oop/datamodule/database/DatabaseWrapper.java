@@ -23,7 +23,7 @@ public abstract class DatabaseWrapper {
                 connection = provideConnection();
             }
         } catch (Throwable throwable) {
-            throw new IllegalStateException("Failed to get connection", throwable);
+            throw new IllegalStateException("Failed to get connection. Perhaps incorrect params?", throwable);
         }
 
         return connection;
