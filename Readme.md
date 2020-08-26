@@ -1,4 +1,4 @@
-[![Build Status](https://api.honeybeedev.com/latestVersion/com.oop/data/icon)](https://api.honeybeedev.com/latestVersion/com.oop/data/downloadUrl)
+[![Build Status](https://api.honeybeedev.com/latestVersion/com.oop/data/icon?width=400px)](https://api.honeybeedev.com/latestVersion/com.oop/data/downloadUrl)
 
 ## Data Module By OOP-778
 Simple, Effective to use data module that supports SQL databases (MySQl, SQLite), Flat Files as JSON
