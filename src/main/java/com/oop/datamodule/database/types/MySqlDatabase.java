@@ -50,8 +50,19 @@ public class MySqlDatabase extends DatabaseWrapper {
         String password;
         int port = 3306;
 
-        String build() {
+        public String build() {
             return "jdbc:mysql://" + this.url + ":" + this.port + "/" + this.database;
+        }
+
+        @Override
+        public String toString() {
+            return "MySqlProperties{" +
+                    "user='" + user + '\'' +
+                    ", url='" + url + '\'' +
+                    ", database='" + database + '\'' +
+                    ", password='" + password + '\'' +
+                    ", port=" + port +
+                    '}';
         }
     }
 }

@@ -4,7 +4,7 @@ plugins {
     `maven-publish`
 }
 
-version = "1.1"
+version = "1.2"
 
 repositories {
     jcenter()
@@ -15,6 +15,7 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.8")
     annotationProcessor("org.projectlombok:lombok:1.18.8")
 
+    implementation("mysql:mysql-connector-java:8.0.21")
     compileOnly(fileTree("./lib"))
 }
 

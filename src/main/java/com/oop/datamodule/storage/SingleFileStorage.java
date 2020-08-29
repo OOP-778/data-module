@@ -15,9 +15,12 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 public abstract class SingleFileStorage<T extends FlatDataBody> extends FileStorage<T> {
     private static final Gson prettifiedGson;
+
+    private static final Logger logger = Logger.getLogger("SingleFileStorage");
 
     static {
         prettifiedGson = StorageInitializer.getInstance().getPrettyfiedGson();
@@ -69,10 +72,13 @@ public abstract class SingleFileStorage<T extends FlatDataBody> extends FileStor
                     if (data.isJsonObject()) {
                         SerializedData serializedData = new SerializedData(data.getAsJsonObject());
                         Optional<SerializedData> type = serializedData.getChildren(getTypeVar());
-                        if (!type.isPresent())
-                            throw new IllegalAccessException("Failed to find type in serialized data. Data is outdated!");
+                        Class<? extends T> clazz;
+                        if (!type.isPresent()) {
+                            logger.warning("Failed to find type in serialized data. Data is outdated. Using the first data type of the provided...");
+                            clazz = getVariants().get(getVariants().keySet().stream().findFirst().orElse(null));
+                        } else
+                            clazz = getVariants().get(type.get().applyAs());
 
-                        Class<? extends T> clazz = getVariants().get(type.get().applyAs());
                         Constructor<? extends T> constructor = getConstructor(Objects.requireNonNull(clazz, "Failed to find clazz for serialized type: " + type.get().applyAs()));
 
                         T object = constructor.newInstance();

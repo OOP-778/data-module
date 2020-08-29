@@ -14,7 +14,6 @@ import java.util.Set;
 public abstract class DatabaseWrapper {
 
     private Connection connection;
-
     protected abstract Connection provideConnection() throws Throwable;
 
     public Connection getConnection() {
