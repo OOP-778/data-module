@@ -42,7 +42,7 @@ public abstract class SingleFileStorage<T extends FlatDataBody> extends FileStor
 
     @Override
     public boolean accepts(Class clazz) {
-        return getClazz() == clazz;
+        return clazz.isAssignableFrom(getClazz());
     }
 
     @Override
@@ -79,7 +79,7 @@ public abstract class SingleFileStorage<T extends FlatDataBody> extends FileStor
                         } else
                             clazz = getVariants().get(type.get().applyAs());
 
-                        Constructor<? extends T> constructor = getConstructor(Objects.requireNonNull(clazz, "Failed to find clazz for serialized type: " + type.get().applyAs()));
+                        Constructor<? extends T> constructor = getConstructor(Objects.requireNonNull(clazz, "Failed to find clazz for serialized type: " + clazz.getSimpleName()));
 
                         T object = constructor.newInstance();
                         object.deserialize(serializedData);

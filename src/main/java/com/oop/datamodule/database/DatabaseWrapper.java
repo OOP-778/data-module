@@ -5,18 +5,14 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 public abstract class DatabaseWrapper {
-
     private Connection connection;
     protected abstract Connection provideConnection() throws Throwable;
 
-    public Connection getConnection() {
+    public synchronized Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {
                 connection = provideConnection();
@@ -28,7 +24,7 @@ public abstract class DatabaseWrapper {
         return connection;
     }
 
-    public List<String> getColumns(String table) {
+    public synchronized List<String> getColumns(String table) {
         List<String> columns = new ArrayList<>();
 
         try (Statement statement = getConnection().createStatement()) {
@@ -48,7 +44,7 @@ public abstract class DatabaseWrapper {
         return columns;
     }
 
-    public void execute(String sql) {
+    public synchronized void execute(String sql) {
         try (PreparedStatement preparedStatement = getConnection().prepareStatement(sql)) {
             preparedStatement.execute();
         } catch (SQLException e) {
@@ -60,7 +56,7 @@ public abstract class DatabaseWrapper {
         return new TableCreator(this);
     }
 
-    public List<String> getTables() {
+    public synchronized List<String> getTables() {
         List<String> tables = new ArrayList<>();
         try (ResultSet resultSet = getConnection().getMetaData().getTables(null, null, null, null)) {
             while (resultSet.next())
@@ -71,7 +67,7 @@ public abstract class DatabaseWrapper {
         return tables;
     }
 
-    public boolean isPrimaryKeyUsed(String table, String[] structure, String primaryKey) {
+    public synchronized boolean isPrimaryKeyUsed(String table, String[] structure, String primaryKey) {
         if (!primaryKey.endsWith("\"") && !primaryKey.startsWith("\""))
             primaryKey = "\"" + primaryKey + "\"";
 
@@ -85,7 +81,7 @@ public abstract class DatabaseWrapper {
     }
 
     @SneakyThrows
-    public List<Set<DataPair<String, String>>> getAllValuesOf(String table, String[] structure) {
+    public synchronized List<Set<DataPair<String, String>>> getAllValuesOf(String table, String[] structure) {
         List<Set<DataPair<String, String>>> allData = new ArrayList<>();
         try (ResultSet rs = getConnection().createStatement().executeQuery("SELECT * FROM " + table)) {
             while (rs.next()) {
@@ -102,7 +98,7 @@ public abstract class DatabaseWrapper {
     }
 
     @SneakyThrows
-    public void remove(String table, String[] structure, String primaryKey) {
+    public synchronized void remove(String table, String[] structure, String primaryKey) {
         if (!primaryKey.startsWith("\""))
             primaryKey = "\"" + primaryKey + "\"";
 

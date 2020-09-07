@@ -8,4 +8,9 @@ public interface DataBody extends SerializableObject, Saveable {
      * Remove the data from database
      */
     void remove();
+
+    /*
+    Check if object is removed
+    */
+    boolean isRemoved();
 }

@@ -50,13 +50,13 @@ public abstract class SqlStorage<T extends SqlDataBody> extends Storage<T> {
     }
 
     @Override
-    public void remove(T object) {
+    public synchronized void remove(T object) {
         onRemove(object);
         StorageInitializer.getInstance().getRunner(true).accept(() -> database.remove(object.getTable(), object.getStructure(), object.getKey()));
     }
 
     @Override
-    public void save(boolean async, Runnable callback) {
+    public synchronized void save(boolean async, Runnable callback) {
         Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
         runner.accept(() -> {
             for (T object : this) {
@@ -87,7 +87,7 @@ public abstract class SqlStorage<T extends SqlDataBody> extends Storage<T> {
     }
 
     @Override
-    public void load(boolean async, Runnable callback) {
+    public synchronized void load(boolean async, Runnable callback) {
         Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
 
         runner.accept(() -> {
@@ -136,7 +136,7 @@ public abstract class SqlStorage<T extends SqlDataBody> extends Storage<T> {
         save(object, true, callback);
     }
 
-    public void save(T object, boolean async, Runnable callback) {
+    public synchronized void save(T object, boolean async, Runnable callback) {
         Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
         runner.accept(() -> {
             prepareTable(object);
@@ -164,7 +164,7 @@ public abstract class SqlStorage<T extends SqlDataBody> extends Storage<T> {
         });
     }
 
-    private void insertObject(T object, String primaryKey, JsonObject jsonObject) {
+    private synchronized void insertObject(T object, String primaryKey, JsonObject jsonObject) {
         BodyCache cache = new BodyCache();
         dataCache.put(primaryKey, cache);
 
@@ -191,7 +191,7 @@ public abstract class SqlStorage<T extends SqlDataBody> extends Storage<T> {
         return database.getConnection().prepareStatement(builder.toString());
     }
 
-    private void updateObject(T object, String primaryKey, JsonObject jsonObject) {
+    private synchronized void updateObject(T object, String primaryKey, JsonObject jsonObject) {
         BodyCache cache = dataCache.computeIfAbsent(primaryKey, key -> new BodyCache());
         String[] structure = object.getStructure();
 
@@ -242,7 +242,7 @@ public abstract class SqlStorage<T extends SqlDataBody> extends Storage<T> {
         return database.getConnection().prepareStatement(builder.toString());
     }
 
-    private void prepareTable(T object) {
+    private synchronized void prepareTable(T object) {
         if (preparedClasses.contains(object.getClass())) return;
 
         String[] structure = object.getStructure();
@@ -255,7 +255,7 @@ public abstract class SqlStorage<T extends SqlDataBody> extends Storage<T> {
             insertTable(tableName, structure, object, database);
     }
 
-    private void insertTable(String tableName, String[] structure, T object, DatabaseWrapper database) {
+    private synchronized void insertTable(String tableName, String[] structure, T object, DatabaseWrapper database) {
         if (preparedClasses.contains(object.getClass())) return;
         preparedClasses.add(object.getClass());
 
@@ -270,7 +270,7 @@ public abstract class SqlStorage<T extends SqlDataBody> extends Storage<T> {
         tableCreator.create();
     }
 
-    private void updateTable(String tableName, String[] structure, T object, DatabaseWrapper database) {
+    private synchronized void updateTable(String tableName, String[] structure, T object, DatabaseWrapper database) {
         if (preparedClasses.contains(object.getClass()) || structure.length == database.getColumns(tableName).size())
             return;
         preparedClasses.add(object.getClass());
