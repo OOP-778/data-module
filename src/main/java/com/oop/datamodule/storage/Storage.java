@@ -1,22 +1,27 @@
 package com.oop.datamodule.storage;
 
-import com.google.common.base.Preconditions;
 import com.oop.datamodule.StorageHolder;
 import com.oop.datamodule.body.DataBody;
 import com.oop.datamodule.util.Loadable;
 import com.oop.datamodule.util.Saveable;
+import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.SneakyThrows;
 
 import java.lang.reflect.Constructor;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public abstract class Storage<T extends DataBody> implements Loadable, Saveable, Iterable<T> {
 
     @Getter
     private final StorageHolder storageHolder;
+
+    @Getter(AccessLevel.PROTECTED)
+    private List<Consumer<Storage<T>>> onLoad = new LinkedList<>();
 
     private Map<Class<? extends T>, Constructor<? extends T>> constructorMap = new ConcurrentHashMap<>();
 
@@ -53,5 +58,9 @@ public abstract class Storage<T extends DataBody> implements Loadable, Saveable,
                 throw new IllegalStateException("Failed to find constructor for " + clazz.getSimpleName());
             }
         });
+    }
+
+    public void onLoad(Consumer<Storage<T>> onLoad) {
+        this.onLoad.add(onLoad);
     }
 }

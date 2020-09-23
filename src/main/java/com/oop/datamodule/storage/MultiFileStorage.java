@@ -90,6 +90,9 @@ public abstract class MultiFileStorage<T extends FlatDataBody> extends FileStora
             }
             if (callback != null)
                 callback.run();
+
+            // On load
+            getOnLoad().forEach(c -> c.accept(this));
         });
     }
 

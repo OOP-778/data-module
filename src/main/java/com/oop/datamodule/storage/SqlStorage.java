@@ -109,6 +109,9 @@ public abstract class SqlStorage<T extends SqlDataBody> extends Storage<T> {
 
                     if (callback != null)
                         callback.run();
+
+                    // On load
+                    getOnLoad().forEach(c -> c.accept(this));
                 } catch (Throwable throwable) {
                     throwable.printStackTrace();
                 }

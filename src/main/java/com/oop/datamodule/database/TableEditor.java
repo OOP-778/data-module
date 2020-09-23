@@ -44,7 +44,7 @@ public class TableEditor {
                 ((SqlLiteDatabase) database).renameColumn(table, renamedColumns.toArray(new DataPair[0]));
             else
                 for (DataPair<String, String> renamedColumn : renamedColumns)
-                    database.execute("ALTER TABLE " + table + " RENAME COLUMN " + renamedColumn.getKey() + " to " + renamedColumn.getValue());
+                    database.execute("ALTER TABLE " + table + " CHANGE " + renamedColumn.getKey() + " " + renamedColumn.getValue() + " TEXT");
         }
 
         // Drop columns

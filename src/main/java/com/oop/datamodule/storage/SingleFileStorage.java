@@ -90,6 +90,9 @@ public abstract class SingleFileStorage<T extends FlatDataBody> extends FileStor
 
                 if (callback != null)
                     callback.run();
+
+                // On load
+                getOnLoad().forEach(c -> c.accept(this));
             } catch (Throwable throwable) {
                 if (lock.isHeldByCurrentThread())
                     lock.unlock();
