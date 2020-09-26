@@ -6,16 +6,17 @@ import com.oop.datamodule.SerializedData;
 import com.oop.datamodule.StorageHolder;
 import com.oop.datamodule.StorageInitializer;
 import com.oop.datamodule.body.FlatDataBody;
+import com.oop.datamodule.util.DataPair;
 import lombok.NonNull;
 import lombok.SneakyThrows;
 
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
@@ -64,30 +65,39 @@ public abstract class MultiFileStorage<T extends FlatDataBody> extends FileStora
     public void load(boolean async, Runnable callback) {
         Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
         runner.accept(() -> {
-            for (File file : Objects.requireNonNull(directory.listFiles())) {
-                try {
-                    BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
-                    JsonObject jsonObject = prettifiedGson.fromJson(reader, JsonObject.class);
-                    reader.close();
-                    if (jsonObject == null) continue;
+            Arrays
+                    .stream(Objects.requireNonNull(directory.listFiles()))
+                    .parallel()
+                    .map(file -> {
+                        try {
+                            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
+                            JsonObject jsonObject = prettifiedGson.fromJson(reader, JsonObject.class);
+                            reader.close();
+                            if (jsonObject == null) return null;
 
-                    SerializedData data = new SerializedData(jsonObject);
-                    Optional<SerializedData> type = data.getChildren(getTypeVar());
-                    if (!type.isPresent())
-                        throw new IllegalAccessException("Failed to find type in serialized data. Data is outdated!");
+                            SerializedData data = new SerializedData(jsonObject);
+                            Optional<SerializedData> type = data.getChildren(getTypeVar());
+                            if (!type.isPresent())
+                                throw new IllegalAccessException("Failed to find type in serialized data. Data is outdated!");
 
-                    Class<? extends T> clazz = getVariants().get(type.get().applyAs());
-                    Constructor<? extends T> constructor = getConstructor(Objects.requireNonNull(clazz, "Failed to find clazz for serialized type: " + type.get().applyAs()));
+                            Class<? extends T> clazz = getVariants().get(type.get().applyAs());
+                            Constructor<? extends T> constructor = getConstructor(Objects.requireNonNull(clazz, "Failed to find clazz for serialized type: " + type.get().applyAs()));
 
-                    T object = constructor.newInstance();
-                    object.deserialize(data);
+                            T object = constructor.newInstance();
+                            object.deserialize(data);
 
-                    handlers.put(object, new ObjectHandler<>(object, file));
-                    onAdd(object);
-                } catch (Throwable throwable) {
-                    throw new IllegalStateException("Failed to load object at file: " + file.getParentFile().getName() + "/" + file.getName(), throwable);
-                }
-            }
+                            return new DataPair<>(object, file);
+                        } catch (Throwable throwable) {
+                            new IllegalStateException("Failed to load object at file: " + file.getParentFile().getName() + "/" + file.getName(), throwable).printStackTrace();
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .forEach(pair -> {
+                        handlers.put(pair.getKey(), new ObjectHandler<>(pair.getKey(), pair.getValue()));
+                        onAdd(pair.getKey());
+                    });
+
             if (callback != null)
                 callback.run();
 
