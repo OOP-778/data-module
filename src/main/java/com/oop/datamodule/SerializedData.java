@@ -124,4 +124,8 @@ public class SerializedData {
 
         return null;
     }
+
+    public <T> T applyAs(String field) {
+        return (T) getChildren(field).map(applyAs()).orElse(null);
+    }
 }

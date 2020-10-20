@@ -13,12 +13,16 @@ import lombok.SneakyThrows;
 import java.io.*;
 import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinTask;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public abstract class MultiFileStorage<T extends FlatDataBody> extends FileStorage<T> {
     private static final Gson prettifiedGson;
@@ -65,7 +69,8 @@ public abstract class MultiFileStorage<T extends FlatDataBody> extends FileStora
     public void load(boolean async, Runnable callback) {
         Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
         runner.accept(() -> {
-            Arrays
+            ForkJoinPool pool = new ForkJoinPool(5);
+            pool.submit(() -> Arrays
                     .stream(Objects.requireNonNull(directory.listFiles()))
                     .parallel()
                     .map(file -> {
@@ -93,10 +98,18 @@ public abstract class MultiFileStorage<T extends FlatDataBody> extends FileStora
                         }
                     })
                     .filter(Objects::nonNull)
+                    .collect(Collectors.toList())
                     .forEach(pair -> {
                         handlers.put(pair.getKey(), new ObjectHandler<>(pair.getKey(), pair.getValue()));
                         onAdd(pair.getKey());
-                    });
+                    }));
+
+            pool.shutdown();
+            try {
+                pool.awaitTermination(20, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
 
             if (callback != null)
                 callback.run();
