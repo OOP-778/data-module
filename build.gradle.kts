@@ -1,90 +1,126 @@
 plugins {
     java
-    id("com.github.johnrengelman.shadow") version "4.0.4"
+    id("com.github.johnrengelman.shadow") version "6.1.0"
     `maven-publish`
 }
 
-version = "1.5"
+version = "1.6"
 
-repositories {
-    jcenter()
-    maven { setUrl("https://repo.codemc.org/repository/nms/") }
+var props: MutableMap<String, ProjectConfig> = hashMapOf()
+loadProjects()
+
+configureProject("api") {
+    publish = false
 }
 
-dependencies {
-    compileOnly("org.projectlombok:lombok:1.18.8")
-    annotationProcessor("org.projectlombok:lombok:1.18.8")
-
-    implementation("mysql:mysql-connector-java:8.0.21")
-    implementation("com.google.code.gson:gson:2.8.6")
-    implementation(fileTree("./lib"))
+configureProject("testing") {
+    publish = false
 }
 
-tasks {
-    register("cleanOut") {
-        val directory = File("${project.projectDir}/out/")
-        if (directory.exists())
-            directory.delete()
-    }
-
-    register("jar-with-dep", com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar::class) {
-        archiveFileName.set("data-module-full.jar")
-        destinationDirectory.set(File("out"))
-
-        from(project.configurations.runtimeClasspath.get(), project.sourceSets.main.orNull!!.output)
-    }
-
-    register("jar-without-dep", com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar::class) {
-        archiveFileName.set("data-module.jar")
-        destinationDirectory.set(File("out"))
-
-        val config = project.configurations.runtimeClasspath.get().copyRecursive()
-        config.dependencies.removeIf { !it.name.contains("gson") }
-
-        from(project.sourceSets.main.orNull!!.output, config)
-        relocate("com.google.gson", "com.oop.datamodule.gson")
-    }
-
-    build {
-        dependsOn(findByName("cleanOut"))
-        dependsOn(findByName("jar-with-dep"))
-        dependsOn(findByName("jar-without-dep"))
-        dependsOn(publish)
-    }
+configureProject("common-sql") {
+    publish = false
 }
 
-publishing {
+subprojects {
+    apply {
+        plugin("java")
+        plugin("com.github.johnrengelman.shadow")
+        plugin("maven-publish")
+    }
+
     repositories {
-        mavenLocal()
-        if (project.hasProperty("mavenUsername")) {
-            maven {
-                credentials {
-                    username = project.property("mavenUsername") as String
-                    password = project.property("mavenPassword") as String
-                }
+        jcenter()
+        maven { setUrl("https://repo.codemc.org/repository/nms/") }
+    }
 
-                setUrl("https://repo.codemc.org/repository/maven-releases/")
+    dependencies {
+        compileOnly("org.projectlombok:lombok:1.18.8")
+        annotationProcessor("org.projectlombok:lombok:1.18.8")
+    }
+
+    val config = props[name]
+
+    tasks {
+        register("cleanOut") {
+            val directory = File("$projectDir/out/")
+            if (directory.exists())
+                directory.delete()
+        }
+
+        config?.let {
+            shadowJar {
+                archiveFileName.set("${it.name}.jar")
+                destinationDirectory.set(file("out"))
+
+                relocate("org", "com.oop.datamodule.lib")
+                relocate("google", "com.oop.datamodule.lib")
+                relocate("com.google", "com.oop.datamodule.lib.google")
+                relocate("com.mysql", "com.oop.datamodule.lib.mysql")
+                relocate("com.mongodb", "com.oop.datamodule.lib.mongodb")
+            }
+        }
+
+        build {
+            dependsOn(findByName("cleanOut"))
+            config?.let {
+                if (it.publish) {
+                    dependsOn(shadowJar)
+                    dependsOn(publish)
+                }
             }
         }
     }
 
-    publications {
-        register("jar-with-dependencies", MavenPublication::class) {
-            val directory = File("${project.projectDir}/out/")
-            if (directory.exists() && directory.listFiles()?.size == 2)
-                artifact(directory.listFiles()!!.filter { file -> file.nameWithoutExtension.endsWith("full") }[0])
-            groupId = "com.oop"
-            artifactId = "data"
-            version = "${project.version}-full"
-        }
+    props[name]?.let { pc ->
+        if (pc.publish) {
+            publishing {
+                repositories {
+                    mavenLocal()
+                    if (project.hasProperty("mavenUsername")) {
+                        maven {
+                            credentials {
+                                username = project.property("mavenUsername") as String
+                                password = project.property("mavenPassword") as String
+                            }
 
-        register("jar-without-dependencies", MavenPublication::class) {
-            val directory = File("${project.projectDir}/out/")
-            if (directory.exists() && directory.listFiles()?.size == 2)
-                artifact(directory.listFiles()!!.filter { file -> !file.nameWithoutExtension.endsWith("full") }[0])
-            groupId = "com.oop"
-            artifactId = "data"
-            version = "${project.version}"
+                            setUrl("https://repo.codemc.org/repository/maven-releases/")
+                        }
+                    }
+                }
+
+                publications {
+                    register("mavenJava", MavenPublication::class) {
+                        artifact(tasks["shadowJar"])
+
+                        groupId = pc.group
+                        artifactId = pc.artifact.replace("-module", "")
+                        version = pc.version.toString()
+                    }
+                }
+            }
         }
     }
+}
+
+// << UTILS START >>
+fun loadProjects() {
+    for (children in childProjects.values)
+        props[children.name.toLowerCase()] = ProjectConfig(children.name, version)
+}
+
+fun configureProject(name: String, apply: (ProjectConfig).() -> Unit) {
+    props[name.toLowerCase()]?.let(apply)
+}
+
+data class ProjectConfig(
+        val name: String,
+        var outName: String = name,
+        var publish: Boolean = true,
+        var group: String = "com.oop.datamodule",
+        var artifact: String = name,
+        var version: Any
+) {
+    constructor(project: String, version: Any) : this(
+            name = project, version = version
+    )
 }

@@ -1,9 +1,24 @@
-[![Build Status](https://api.honeybeedev.com/latestVersion/com.oop/data/icon?width=400px)](https://api.honeybeedev.com/latestVersion/com.oop/data/downloadUrl)
+[![Build Status](https://api.honeybeedev.com/latestVersion/com.oop.datamodule/universal/icon?width=400px)](https://api.honeybeedev.com/latestVersion/com.oop/data/downloadUrl)
 
 ## Data Module By OOP-778
-Simple, Effective to use data module that supports SQL databases (MySQl, SQLite), Flat Files as JSON
+Simple, Effective to use data module that supports
+- MySQL
+- SQLite
+- Json Flat Files
+- MongoDB
 
-# Full Version with dependencies
+## Artifacts
+- universal
+  - comes with all modules and has UniversalBody that works on all listed artifacts
+- mysql
+  - comes only with mysql module
+- sqlite
+  - comes with only sqlite module
+- json
+  - comes only with flat file module
+- mongodb
+  - comes only with mongodb module
+
 ## Maven
 ```xml
 <repository>
@@ -12,9 +27,9 @@ Simple, Effective to use data module that supports SQL databases (MySQl, SQLite)
 </repository>
 
 <dependency>
-    <groupId>com.oop</groupId>
-    <artifactId>data</artifactId>
-    <version>latest build-full</version>
+    <groupId>com.oop.datamodule</groupId>
+    <artifactId>artifact-name</artifactId>
+    <version>latest build version</version>
 </dependency>
 ```
 
@@ -25,33 +40,6 @@ repositories {
 }
 
 dependencies {
-    compile "com.oop:data:latest build-full"
-}
-```
-
-# Version without dependencies
-For spigot development
-## Maven
-```xml
-<repository>
-    <id>code-mc</id>
-    <url>https://repo.codemc.org/repository/maven-releases/</url>
-</repository>
-
-<dependency>
-    <groupId>com.oop</groupId>
-    <artifactId>data</artifactId>
-    <version>latest build</version>
-</dependency>
-```
-
-## Gradle
-```groovy
-repositories {
-    maven { url 'https://repo.codemc.org/repository/maven-releases/' }
-}
-
-dependencies {
-    compile "com.oop:data:latest build"
+    compile "com.oop.datamodule:artifact:latest build version"
 }
 ```
