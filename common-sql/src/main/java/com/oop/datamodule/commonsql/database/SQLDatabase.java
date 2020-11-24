@@ -6,10 +6,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 public abstract class SQLDatabase {
@@ -18,7 +15,7 @@ public abstract class SQLDatabase {
 
     public abstract String getType();
 
-    public synchronized Connection getConnection() {
+    public Connection getConnection() {
         try {
             if (connection == null || connection.isClosed()) {
                 connection = provideConnection();
@@ -30,7 +27,7 @@ public abstract class SQLDatabase {
         return connection;
     }
 
-    public synchronized List<String> getColumns(String table) {
+    public List<String> getColumns(String table) {
         List<String> columns = new ArrayList<>();
 
         try (Statement statement = getConnection().createStatement()) {
@@ -50,7 +47,7 @@ public abstract class SQLDatabase {
         return columns;
     }
 
-    public synchronized void execute(String sql) {
+    public void execute(String sql) {
         try (PreparedStatement preparedStatement = getConnection().prepareStatement(sql)) {
             preparedStatement.execute();
         } catch (SQLException e) {
@@ -73,7 +70,7 @@ public abstract class SQLDatabase {
         return tables;
     }
 
-    public synchronized boolean isPrimaryKeyUsed(String table, String[] structure, String primaryKey) {
+    public boolean isPrimaryKeyUsed(String table, String[] structure, String primaryKey) {
         if (!primaryKey.endsWith("\"") && !primaryKey.startsWith("\""))
             primaryKey = "\"" + primaryKey + "\"";
 
@@ -87,12 +84,12 @@ public abstract class SQLDatabase {
     }
 
     @SneakyThrows
-    public synchronized List<Set<DataPair<String, String>>> getAllValuesOf(String table, String[] structure) {
-        List<Set<DataPair<String, String>>> allData = new ArrayList<>();
+    public List<List<DataPair<String, String>>> getAllValuesOf(String table, String[] structure) {
+        List<List<DataPair<String, String>>> allData = new LinkedList<>();
         try (ResultSet rs = getConnection().createStatement().executeQuery("SELECT * FROM " + table)) {
             while (rs.next()) {
                 int i = 1;
-                Set<DataPair<String, String>> data = new LinkedHashSet<>();
+                List<DataPair<String, String>> data = new LinkedList<>();
                 for (String column : structure) {
                     data.add(new DataPair<>(column, rs.getString(i)));
                     i++;
@@ -104,7 +101,7 @@ public abstract class SQLDatabase {
     }
 
     @SneakyThrows
-    public synchronized void remove(String table, String[] structure, String primaryKey) {
+    public void remove(String table, String[] structure, String primaryKey) {
         if (!primaryKey.startsWith("\""))
             primaryKey = "\"" + primaryKey + "\"";
 

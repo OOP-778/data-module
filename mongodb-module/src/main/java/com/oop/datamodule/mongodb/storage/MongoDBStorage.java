@@ -1,7 +1,6 @@
 package com.oop.datamodule.mongodb.storage;
 
 import com.google.gson.JsonElement;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -10,18 +9,18 @@ import com.mongodb.client.model.UpdateOptions;
 import com.oop.datamodule.api.SerializedData;
 import com.oop.datamodule.api.StorageInitializer;
 import com.oop.datamodule.api.StorageRegistry;
-import com.oop.datamodule.api.model.ModelBody;
 import com.oop.datamodule.api.model.ModelCachedData;
 import com.oop.datamodule.api.storage.Storage;
 import com.oop.datamodule.api.storage.lock.ModelLock;
+import com.oop.datamodule.api.util.job.JobsResult;
+import com.oop.datamodule.api.util.job.JobsRunner;
+import com.oop.datamodule.mongodb.MongoJob;
 import com.oop.datamodule.mongodb.model.MongoModelBody;
 import lombok.NonNull;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -80,7 +79,6 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
                     JsonElement element = entry.getValue();
                     if (!modelCachedData.isUpdated(entry.getKey(), element.toString())) return;
 
-                    System.out.println("updated field: " + entry.getKey());
                     append(updatedFields, entry.getKey(), entry.getValue());
                 });
                 if (updatedFields.isEmpty()) return;
@@ -112,23 +110,26 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
     public void load(boolean async, Runnable callback) {
         StorageInitializer.getInstance().getRunner(async)
                 .accept(() -> {
+                    JobsRunner acquire = JobsRunner.acquire();
+
                     for (Map.Entry<String, Class<T>> variantEntry : getVariants().entrySet()) {
                         String key = variantEntry.getKey();
                         MongoCollection<Document> variantCollection = null;
+
                         try {
                             variantCollection = database.getCollection(key);
-                        } catch (Throwable ignored) {}
+                        } catch (Throwable ignored) {
+                        }
 
                         // Because collection doesn't exist, we can continue our loop
                         if (variantCollection == null) continue;
 
                         Constructor<T> constructor = getConstructor(variantEntry.getValue());
-                        try (MongoCursor<Document> cursor = variantCollection.find().iterator()) {
-                            while (cursor.hasNext()) {
-                                Document next = cursor.next();
 
+                        try (MongoCursor<Document> cursor = variantCollection.find().iterator()) {
+                            Document next = cursor.next();
+                            acquire.addJob(new MongoJob(() -> {
                                 SerializedData data = fromDocument(next);
-                                System.out.println(data.getJsonElement().toString());
                                 try {
                                     T object = constructor.newInstance();
                                     object.deserialize(data);
@@ -138,15 +139,17 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
                                 } catch (Throwable throwable) {
                                     StorageInitializer.getInstance().getErrorHandler().accept(throwable);
                                 }
-                            }
+                            }));
                         }
-
-                        // On load
-                        getOnLoad().forEach(c -> c.accept(this));
-
-                        if (callback != null)
-                            callback.run();
                     }
+
+                    JobsResult jobsResult = acquire.startAndWait();
+
+                    // On load
+                    getOnLoad().forEach(c -> c.accept(this));
+
+                    if (callback != null)
+                        callback.run();
                 });
     }
 

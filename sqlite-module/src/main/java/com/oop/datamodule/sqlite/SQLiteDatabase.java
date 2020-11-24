@@ -83,8 +83,8 @@ public class SQLiteDatabase extends SQLDatabase {
 
         PreparedStatement insertStatement = getConnection().prepareStatement(builder.toString());
 
-        List<Set<DataPair<String, String>>> allValuesOf = getAllValuesOf(table, oldStructure);
-        for (Set<DataPair<String, String>> dataPairs : allValuesOf) {
+        List<List<DataPair<String, String>>> allValuesOf = getAllValuesOf(table, oldStructure);
+        for (List<DataPair<String, String>> dataPairs : allValuesOf) {
             int index = 1;
             for (DataPair<String, String> dataPair : dataPairs) {
                 if (columnsToDrop.contains(dataPair.getKey())) continue;
@@ -158,8 +158,8 @@ public class SQLiteDatabase extends SQLDatabase {
 
         PreparedStatement insertStatement = getConnection().prepareStatement(builder.toString());
 
-        List<Set<DataPair<String, String>>> allValuesOf = getAllValuesOf(table, structure.toArray(new String[0]));
-        for (Set<DataPair<String, String>> dataPairs : allValuesOf) {
+        List<List<DataPair<String, String>>> allValuesOf = getAllValuesOf(table, structure.toArray(new String[0]));
+        for (List<DataPair<String, String>> dataPairs : allValuesOf) {
             int index = 1;
             for (DataPair<String, String> dataPair : dataPairs) {
                 insertStatement.setString(index, dataPair.getValue());

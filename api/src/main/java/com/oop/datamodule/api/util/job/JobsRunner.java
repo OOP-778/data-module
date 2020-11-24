@@ -7,8 +7,11 @@ import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 public class JobsRunner {
+    private final Object lock = true;
+
     private final ExecutorService executor;
-    private Set<NativeJob> jobs = ConcurrentHashMap.newKeySet();
+    private final Set<NativeJob> jobs = ConcurrentHashMap.newKeySet();
+    private JobsResult result;
     private CompletableFuture<JobsResult> completionFuture = new CompletableFuture<>();
 
     public JobsRunner(ExecutorService executor) {
@@ -17,17 +20,13 @@ public class JobsRunner {
 
     public static JobsRunner acquire() {
         return new JobsRunner(
-                new ThreadPoolExecutor(0, Integer.MAX_VALUE,
-                        20L, TimeUnit.SECONDS,
-                        new SynchronousQueue<>())
+                Executors.newCachedThreadPool()
         );
     }
 
-    private JobsResult result;
-
     @SneakyThrows
     protected void onCompletion(NativeJob job) {
-        synchronized (jobs) {
+        synchronized (lock) {
             jobs.remove(job);
 
             if (result == null)
@@ -54,15 +53,17 @@ public class JobsRunner {
 
     public void startAndForget() {
         for (NativeJob job : jobs)
-            executor.submit(job);
+            executor.execute(job);
     }
 
     @SneakyThrows
     public JobsResult startAndWait() {
+        if (jobs.isEmpty()) return new JobsResult();
+
         for (NativeJob job : jobs)
             executor.submit(job);
 
-        return completionFuture.get(1, TimeUnit.MINUTES);
+        return completionFuture.get(5, TimeUnit.MINUTES);
     }
 
     protected static class NativeJob extends Job {

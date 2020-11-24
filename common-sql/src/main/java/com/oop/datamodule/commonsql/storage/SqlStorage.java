@@ -10,6 +10,8 @@ import com.oop.datamodule.api.storage.Storage;
 import com.oop.datamodule.api.storage.lock.ModelLock;
 import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.api.util.DataUtil;
+import com.oop.datamodule.api.util.job.JobsResult;
+import com.oop.datamodule.api.util.job.JobsRunner;
 import com.oop.datamodule.commonsql.model.SqlModelBody;
 import com.oop.datamodule.commonsql.database.SQLDatabase;
 import com.oop.datamodule.commonsql.util.Column;
@@ -22,12 +24,13 @@ import java.lang.reflect.Constructor;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
-    private final Set<String> preparedTables = new HashSet<>();
+    private final Set<String> preparedTables = ConcurrentHashMap.newKeySet();
 
     @Getter
     private SQLDatabase database;
@@ -65,34 +68,56 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
     }
 
     @Override
-    public synchronized void save(boolean async, Runnable callback) {
+    public void save(boolean async, Runnable callback) {
         Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
         runner.accept(() -> {
+            JobsRunner acquire = JobsRunner.acquire();
+
+            try {
+                database.getConnection().setAutoCommit(false);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+
             for (T object : this) {
-                ModelLock<T> lock = getLock(object);
-                if (lock.isLocked()) continue;
+                acquire.addJob(new SqlJob(() -> {
+                    ModelLock<T> lock = getLock(object);
+                    if (lock.isLocked()) return;
 
-                lock.lockAndUse(() -> {
-                    if (!preparedTables.contains(object.getClass()))
-                        prepareTable(object);
+                    lock.lockAndUse(() -> {
+                        try {
+                            if (!preparedTables.contains(findVariantNameFor(object.getClass())))
+                                prepareTable(object);
 
-                    SerializedData data = new SerializedData();
-                    object.serialize(data);
+                            SerializedData data = new SerializedData();
+                            object.serialize(data);
 
-                    JsonObject jsonObject = data.getJsonElement().getAsJsonObject();
-                    JsonElement[] jsonElements = new JsonElement[object.getStructure().length];
-                    for (int i = 0; i < object.getStructure().length; i++) {
-                        JsonElement element = jsonObject.get(object.getStructure()[i]);
-                        jsonElements[i] = Objects.requireNonNull(element, "Failed to find '" + object.getStructure()[i] + "' field inside serialized data of " + object.getClass().getName());
-                    }
+                            JsonObject jsonObject = data.getJsonElement().getAsJsonObject();
+                            JsonElement[] jsonElements = new JsonElement[object.getStructure().length];
+                            for (int i = 0; i < object.getStructure().length; i++) {
+                                JsonElement element = jsonObject.get(object.getStructure()[i]);
+                                jsonElements[i] = Objects.requireNonNull(element, "Failed to find '" + object.getStructure()[i] + "' field inside serialized data of " + object.getClass().getName());
+                            }
 
-                    String primaryKey = object.getKey();
-                    if (database.isPrimaryKeyUsed(findVariantNameFor(object.getClass()), object.getStructure(), primaryKey))
-                        updateObject(object, primaryKey, jsonObject);
+                            String primaryKey = object.getKey();
+                            if (database.isPrimaryKeyUsed(findVariantNameFor(object.getClass()), object.getStructure(), primaryKey))
+                                updateObject(object, primaryKey, jsonObject);
 
-                    else
-                        insertObject(object, primaryKey, jsonObject);
-                });
+                            else
+                                insertObject(object, primaryKey, jsonObject);
+                        } catch (Throwable throwable) {
+                            throwable.printStackTrace();
+                        }
+                    });
+                }));
+            }
+
+            JobsResult jobsResult = acquire.startAndWait();
+            try {
+                database.getConnection().commit();
+                database.getConnection().setAutoCommit(true);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
             }
 
             if (callback != null)
@@ -105,36 +130,45 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
         Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
 
         runner.accept(() -> {
+            JobsRunner acquire = JobsRunner.acquire();
             for (Class<? extends T> clazz : getVariants().values()) {
                 try {
                     Constructor constructor = DataUtil.getConstructor(clazz);
                     T dummy = (T) constructor.newInstance();
                     prepareTable(dummy);
 
-                    for (Set<DataPair<String, String>> dataPairs : database.getAllValuesOf(findVariantNameFor(dummy.getClass()), dummy.getStructure())) {
-                        JsonObject object = toJson(dataPairs);
-                        SerializedData data = new SerializedData(object);
+                    List<List<DataPair<String, String>>> allValues = database.getAllValuesOf(findVariantNameFor(dummy.getClass()), dummy.getStructure());
+                    for (List<DataPair<String, String>> allValue : allValues) {
+                        acquire.addJob(new SqlJob(() -> {
+                            try {
+                                JsonObject object = toJson(allValue);
+                                SerializedData data = new SerializedData(object);
 
-                        T t = (T) constructor.newInstance();
-                        t.deserialize(data);
+                                T t = (T) constructor.newInstance();
+                                t.deserialize(data);
 
-                        onAdd(t);
-                        loadObjectCache(t.getKey(), data);
+                                onAdd(t);
+                                loadObjectCache(t.getKey(), data);
+                            } catch (Exception exception) {
+                                exception.printStackTrace();
+                            }
+                        }));
                     }
-
-                    if (callback != null)
-                        callback.run();
-
-                    // On load
-                    getOnLoad().forEach(c -> c.accept(this));
                 } catch (Throwable throwable) {
                     StorageInitializer.getInstance().getErrorHandler().accept(throwable);
                 }
             }
+
+            JobsResult jobsResult = acquire.startAndWait();
+            if (callback != null)
+                callback.run();
+
+            // On load
+            getOnLoad().forEach(c -> c.accept(this));
         });
     }
 
-    private JsonObject toJson(Set<DataPair<String, String>> objectValues) {
+    private JsonObject toJson(List<DataPair<String, String>> objectValues) {
         JsonObject object = new JsonObject();
         for (DataPair<String, String> objectValue : objectValues) {
             object.add(objectValue.getKey(), StorageInitializer.getInstance().getGson().fromJson(objectValue.getValue(), JsonElement.class));
@@ -263,7 +297,7 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
         return database.getConnection().prepareStatement(builder.toString());
     }
 
-    protected synchronized void prepareTable(T object) {
+    protected void prepareTable(T object) {
         if (preparedTables.contains(findVariantNameFor(object.getClass()))) return;
 
         String[] structure = object.getStructure();
@@ -276,7 +310,7 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
             insertTable(tableName, structure, database);
     }
 
-    protected synchronized void insertTable(String tableName, String[] structure, SQLDatabase database) {
+    protected void insertTable(String tableName, String[] structure, SQLDatabase database) {
         if (preparedTables.contains(tableName)) return;
         preparedTables.add(tableName);
 
@@ -291,7 +325,7 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
         tableCreator.create();
     }
 
-    protected synchronized void updateTable(String tableName, String[] structure, SQLDatabase database) {
+    protected void updateTable(String tableName, String[] structure, SQLDatabase database) {
         if (preparedTables.contains(tableName) || structure.length == database.getColumns(tableName).size())
             return;
         preparedTables.add(tableName);

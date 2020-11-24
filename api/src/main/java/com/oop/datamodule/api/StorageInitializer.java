@@ -62,6 +62,20 @@ public class StorageInitializer {
         return new DataPair<>(instance, () -> instance = null);
     }
 
+    public static DataPair<StorageInitializer, Runnable> initialize(
+            @NonNull Consumer<Runnable> asyncRunner,
+            @NonNull Consumer<Runnable> syncRunner
+    ) {
+        Preconditions.checkArgument(instance == null, "Instance of StorageInitializer already exists!");
+        instance = new StorageInitializer();
+        instance.asyncRunner = asyncRunner;
+        instance.syncRunner = syncRunner;
+        instance.onBuild = null;
+        instance.errorHandler = Throwable::printStackTrace;
+
+        return new DataPair<>(instance, () -> instance = null);
+    }
+
     private Consumer<Runnable> asyncRunner;
     private Consumer<Runnable> syncRunner = Runnable::run;
     private Consumer<GsonBuilder> onBuild;

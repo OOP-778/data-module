@@ -52,7 +52,7 @@ subprojects {
                 archiveFileName.set("${it.name}.jar")
                 destinationDirectory.set(file("out"))
 
-                relocate("org", "com.oop.datamodule.lib")
+                //relocate("org", "com.oop.datamodule.lib")
                 relocate("google", "com.oop.datamodule.lib")
                 relocate("com.google", "com.oop.datamodule.lib.google")
                 relocate("com.mysql", "com.oop.datamodule.lib.mysql")
