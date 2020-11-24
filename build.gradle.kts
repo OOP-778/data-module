@@ -90,13 +90,32 @@ subprojects {
 
                 publications {
                     register("mavenJava", MavenPublication::class) {
-                        artifact(tasks["shadowJar"])
+                        artifact(file("out/${pc.name}.jar"))
 
                         groupId = pc.group
                         artifactId = pc.artifact.replace("-module", "")
                         version = pc.version.toString()
+
+                        println(pc.version.toString())
+                        println(pc.artifact.replace("-module", ""))
                     }
                 }
+            }
+        }
+    }
+}
+
+tasks {
+    register("generate-javadocs", Javadoc::class) {
+        setDestinationDir(file("$buildDir/docs"))
+        title = "$project.name $version API"
+
+        subprojects.forEach { proj ->
+            proj.tasks.withType<Javadoc>().forEach { javadocTask ->
+                source += javadocTask.source
+                classpath += javadocTask.classpath
+                excludes += javadocTask.excludes
+                includes += javadocTask.includes
             }
         }
     }

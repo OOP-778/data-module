@@ -7,7 +7,7 @@ import lombok.Getter;
 import java.util.Map;
 
 /**
- * Allows linking of storage providers implementations to access onAdd & onRemove
+ * Allows linking of storage providers implementations to access onAdd and onRemove
  */
 @AllArgsConstructor
 @Getter
