@@ -39,7 +39,6 @@ subprojects {
     }
 
     val config = props[name]
-
     tasks {
         register("cleanOut") {
             val directory = File("$projectDir/out/")
@@ -69,6 +68,14 @@ subprojects {
                 }
             }
         }
+
+        config?.let {
+            if (it.publish) {
+                shadowJar {
+                    finalizedBy(publish)
+                }
+            }
+        }
     }
 
     props[name]?.let { pc ->
@@ -95,9 +102,6 @@ subprojects {
                         groupId = pc.group
                         artifactId = pc.artifact.replace("-module", "")
                         version = pc.version.toString()
-
-                        println(pc.version.toString())
-                        println(pc.artifact.replace("-module", ""))
                     }
                 }
             }
