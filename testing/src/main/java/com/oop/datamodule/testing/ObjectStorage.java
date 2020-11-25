@@ -11,7 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 public class ObjectStorage extends UniversalStorage<Object> {
-    private Map<UUID, Object> data = new ConcurrentHashMap<>();
+    private final Map<UUID, Object> data = new ConcurrentHashMap<>();
 
     public ObjectStorage(
             @NonNull StorageRegistry storageRegistry

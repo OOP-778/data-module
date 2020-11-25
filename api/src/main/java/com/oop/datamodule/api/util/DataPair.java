@@ -4,8 +4,8 @@ import lombok.Getter;
 
 @Getter
 public class DataPair<K, V> {
-    private K key;
-    private V value;
+    private final K key;
+    private final V value;
 
     public DataPair(K key, V value) {
         this.key = key;

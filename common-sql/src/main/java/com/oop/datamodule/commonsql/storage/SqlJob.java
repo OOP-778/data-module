@@ -4,7 +4,7 @@ import com.oop.datamodule.api.util.job.Job;
 
 public class SqlJob extends Job {
 
-    private Runnable runnable;
+    private final Runnable runnable;
     protected SqlJob(Runnable runnable) {
         this.runnable = runnable;
     }

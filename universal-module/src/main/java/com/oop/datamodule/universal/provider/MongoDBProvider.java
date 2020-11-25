@@ -18,7 +18,6 @@ public class MongoDBProvider implements StorageProvider<MongoDatabase> {
     }
 
     protected static class MongoStorageImpl<T extends UniversalBodyModel> extends MongoDBStorage<T> {
-
         private final Linker<T> linker;
         public MongoStorageImpl(@NonNull Linker<T> linker, @NonNull MongoDatabase database) {
             super(database);

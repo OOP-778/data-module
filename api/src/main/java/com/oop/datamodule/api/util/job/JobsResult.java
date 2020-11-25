@@ -8,6 +8,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
 public class JobsResult {
-    private List<Throwable> errors = new ArrayList<>();
-    private AtomicInteger completed = new AtomicInteger(0);
+    private final List<Throwable> errors = new ArrayList<>();
+    private final AtomicInteger completed = new AtomicInteger(0);
 }

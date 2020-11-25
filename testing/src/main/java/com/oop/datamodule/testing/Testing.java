@@ -2,7 +2,7 @@ package com.oop.datamodule.testing;
 
 import com.oop.datamodule.api.StorageInitializer;
 import com.oop.datamodule.api.StorageRegistry;
-import com.oop.datamodule.mongodb.MongoBuilder;
+import com.oop.datamodule.mongodb.MongoCredential;
 import com.oop.datamodule.mysql.MySQLCredential;
 import com.oop.datamodule.universal.StorageProviders;
 
@@ -24,10 +24,10 @@ public class Testing {
                         .MONGO_DB
                         .provide(
                                 objects.getLinker(),
-                                new MongoBuilder()
+                                new MongoCredential()
                                         .connectionUri("...")
                                         .database("admin")
-                                        .buildAndGetDb()
+                                        .build()
                         )
         );
         objects.load();

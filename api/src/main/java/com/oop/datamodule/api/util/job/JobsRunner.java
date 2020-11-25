@@ -12,7 +12,7 @@ public class JobsRunner {
     private final ExecutorService executor;
     private final Set<NativeJob> jobs = ConcurrentHashMap.newKeySet();
     private JobsResult result;
-    private CompletableFuture<JobsResult> completionFuture = new CompletableFuture<>();
+    private final CompletableFuture<JobsResult> completionFuture = new CompletableFuture<>();
 
     public JobsRunner(ExecutorService executor) {
         this.executor = executor;
@@ -67,8 +67,8 @@ public class JobsRunner {
     }
 
     protected static class NativeJob extends Job {
-        private Job passed;
-        private Consumer<NativeJob> completion;
+        private final Job passed;
+        private final Consumer<NativeJob> completion;
         private Throwable resultedTo;
 
         public NativeJob(Job passed, Consumer<NativeJob> completion) {

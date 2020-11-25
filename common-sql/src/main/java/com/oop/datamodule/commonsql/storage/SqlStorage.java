@@ -33,7 +33,7 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
     private final Set<String> preparedTables = ConcurrentHashMap.newKeySet();
 
     @Getter
-    private SQLDatabase database;
+    private final SQLDatabase database;
 
     public SqlStorage(
             StorageRegistry storageRegistry,

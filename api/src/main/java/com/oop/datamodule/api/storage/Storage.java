@@ -29,13 +29,13 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
     private final Set<String> beingRemoved = ConcurrentHashMap.newKeySet();
 
     @Getter(value = AccessLevel.PROTECTED)
-    private Map<Class<? extends T>, Constructor<? extends T>> constructorMap = new ConcurrentHashMap<>();
+    private final Map<Class<? extends T>, Constructor<? extends T>> constructorMap = new ConcurrentHashMap<>();
 
     @Getter(AccessLevel.PROTECTED)
-    private List<Consumer<Storage<T>>> onLoad = new LinkedList<>();
+    private final List<Consumer<Storage<T>>> onLoad = new LinkedList<>();
 
     @Getter(AccessLevel.PROTECTED)
-    private Map<String, Class<T>> variants = new HashMap<>();
+    private final Map<String, Class<T>> variants = new HashMap<>();
 
     public Storage(
             StorageRegistry storageRegistry,

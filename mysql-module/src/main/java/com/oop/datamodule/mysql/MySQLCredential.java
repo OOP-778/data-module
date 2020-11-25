@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
+import java.sql.Connection;
+
 @Accessors(chain = true, fluent = true)
 @Setter
 @Getter
@@ -32,5 +34,17 @@ public class MySQLCredential implements SqlCredential {
             url += "?useSSL=true";
 
         return url;
+    }
+
+    @Override
+    public boolean test() {
+        try {
+            MySQLDatabase build = build();
+            try (Connection connection = build.provideConnection()) {}
+        } catch (Throwable throwable) {
+            throw new IllegalStateException("MySQL database test failed...", throwable);
+        }
+
+        return true;
     }
 }

@@ -31,7 +31,7 @@ public abstract class JsonStorage<T extends ModelBody> extends Storage<T> {
         prettifiedGson = StorageInitializer.getInstance().getPrettyfiedGson();
     }
 
-    private File directory;
+    private final File directory;
 
     public JsonStorage(
             StorageRegistry storageRegistry,

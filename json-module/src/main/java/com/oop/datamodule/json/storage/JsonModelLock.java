@@ -16,9 +16,9 @@ import java.nio.charset.StandardCharsets;
 public class JsonModelLock<T extends ModelBody> extends ModelLock<T> {
 
     @Getter
-    private File file;
+    private final File file;
 
-    private JsonStorage<T> storage;
+    private final JsonStorage<T> storage;
 
     public JsonModelLock(@NonNull T object, File file, JsonStorage<T> storage) {
         super(object);

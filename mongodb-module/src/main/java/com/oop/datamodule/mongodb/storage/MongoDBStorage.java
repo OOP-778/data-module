@@ -27,7 +27,7 @@ import java.util.function.Consumer;
 import static com.oop.datamodule.mongodb.MongoHelper.*;
 
 public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T> {
-    private MongoDatabase database;
+    private final MongoDatabase database;
 
     public MongoDBStorage(
             StorageRegistry storageRegistry,

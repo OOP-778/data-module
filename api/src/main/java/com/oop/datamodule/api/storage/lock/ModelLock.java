@@ -11,7 +11,7 @@ public class ModelLock<T> {
     @NonNull
     protected final T object;
 
-    private ReentrantLock lock = new ReentrantLock();
+    private final ReentrantLock lock = new ReentrantLock();
 
     public void lockAndUse(Consumer<T> consumer) {
         try {

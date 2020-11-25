@@ -6,7 +6,8 @@ import lombok.NonNull;
 
 @AllArgsConstructor
 public class MongoJob extends Job {
-    private @NonNull Runnable runnable;
+    private @NonNull
+    final Runnable runnable;
 
     @Override
     public String getName() {

@@ -176,8 +176,8 @@ public class SQLiteDatabase extends SQLDatabase {
     @Getter
     @AllArgsConstructor
     public static class TableStruct {
-        private DataPair<String, String> primarykey;
-        private List<DataPair<String, String>> columns;
+        private final DataPair<String, String> primarykey;
+        private final List<DataPair<String, String>> columns;
     }
 
     @Override

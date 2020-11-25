@@ -83,7 +83,7 @@ public class StorageInitializer {
     @Getter
     private Consumer<Throwable> errorHandler;
 
-    private Map<Class<?>, AdapterObject<?>> adapters = new HashMap<>();
+    private final Map<Class<?>, AdapterObject<?>> adapters = new HashMap<>();
     private Gson gson;
 
     private StorageInitializer() {}
@@ -91,9 +91,9 @@ public class StorageInitializer {
     @Getter
     @AllArgsConstructor
     public static class AdapterObject<T> {
-        private boolean hierarchyEnabled;
-        private Class<T> baseClass;
-        private TypeAdapter<T> adapter;
+        private final boolean hierarchyEnabled;
+        private final Class<T> baseClass;
+        private final TypeAdapter<T> adapter;
     }
 
     /**
