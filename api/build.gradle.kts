@@ -2,7 +2,6 @@ version = "1.0"
 
 dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
-    implementation(fileTree("/lib"))
 
     compileOnly("org.projectlombok:lombok:1.18.8")
     annotationProcessor("org.projectlombok:lombok:1.18.8")
