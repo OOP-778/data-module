@@ -163,6 +163,9 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
             }
 
             JobsResult jobsResult = acquire.startAndWait();
+            for (Throwable error : jobsResult.getErrors())
+                StorageInitializer.getInstance().getErrorHandler().accept(error);
+
             if (callback != null)
                 callback.run();
 

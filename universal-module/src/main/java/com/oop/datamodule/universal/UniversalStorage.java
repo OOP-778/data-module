@@ -12,7 +12,9 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public abstract class UniversalStorage<T extends UniversalBodyModel> extends Storage<T> {
-    private Storage<T> storageImpl;
+
+    @Getter
+    private Storage<T> currentImplementation;
 
     @Getter (value = AccessLevel.PACKAGE)
     private final Consumer<T> adder = this::onAdd;
@@ -33,27 +35,27 @@ public abstract class UniversalStorage<T extends UniversalBodyModel> extends Sto
     }
 
     public UniversalStorage<T> currentImplementation(Storage<T> storage) {
-        this.storageImpl = storage;
+        this.currentImplementation = storage;
         return this;
     }
 
     @Override
     public void save(T object, boolean async, Runnable callback) {
-        storageImpl.save(object, async, callback);
+        currentImplementation.save(object, async, callback);
     }
 
     @Override
     public void load(boolean async, Runnable callback) {
-        storageImpl.load(async, callback);
+        currentImplementation.load(async, callback);
     }
 
     @Override
     public void save(boolean async, Runnable callback) {
-        storageImpl.save(async, callback);
+        currentImplementation.save(async, callback);
     }
 
     @Override
     public void remove(T object) {
-        storageImpl.remove(object);
+        currentImplementation.remove(object);
     }
 }

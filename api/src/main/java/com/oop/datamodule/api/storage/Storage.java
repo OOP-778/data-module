@@ -75,6 +75,10 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
 
     public abstract void save(T object, boolean async, Runnable callback);
 
+    public void save(T object, boolean async) {
+        save(object, async, null);
+    }
+
     public abstract Stream<T> stream();
 
     public boolean accepts(Class clazz) {

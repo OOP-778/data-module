@@ -79,7 +79,7 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
                     JsonElement element = entry.getValue();
                     if (!modelCachedData.isUpdated(entry.getKey(), element.toString())) return;
 
-                    append(updatedFields, entry.getKey(), entry.getValue());
+                    appendBson(updatedFields, entry.getKey(), entry.getValue());
                 });
                 if (updatedFields.isEmpty()) return;
 
@@ -127,6 +127,8 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
                         Constructor<T> constructor = getConstructor(variantEntry.getValue());
 
                         try (MongoCursor<Document> cursor = variantCollection.find().iterator()) {
+                            if (!cursor.hasNext()) continue;
+
                             Document next = cursor.next();
                             acquire.addJob(new MongoJob(() -> {
                                 SerializedData data = fromDocument(next);
@@ -144,6 +146,8 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
                     }
 
                     JobsResult jobsResult = acquire.startAndWait();
+                    for (Throwable error : jobsResult.getErrors())
+                        StorageInitializer.getInstance().getErrorHandler().accept(error);
 
                     // On load
                     getOnLoad().forEach(c -> c.accept(this));
