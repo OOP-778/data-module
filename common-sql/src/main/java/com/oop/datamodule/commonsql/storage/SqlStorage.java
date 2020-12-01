@@ -21,6 +21,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Constructor;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
@@ -73,60 +74,62 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
         runner.accept(() -> {
             JobsRunner acquire = JobsRunner.acquire();
 
-            try {
-                database.getConnection().setAutoCommit(false);
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
+            synchronized (database.getConnection()) {
+                try {
+                    database.getConnection().setAutoCommit(false);
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
 
-            for (T object : this) {
-                acquire.addJob(new SqlJob(() -> {
-                    ModelLock<T> lock = getLock(object);
-                    if (lock.isLocked()) return;
+                for (T object : this) {
+                    acquire.addJob(new SqlJob(() -> {
+                        ModelLock<T> lock = getLock(object);
+                        if (lock.isLocked()) return;
 
-                    lock.lockAndUse(() -> {
-                        try {
-                            if (!preparedTables.contains(findVariantNameFor(object.getClass())))
-                                prepareTable(object);
+                        lock.lockAndUse(() -> {
+                            try {
+                                if (!preparedTables.contains(findVariantNameFor(object.getClass())))
+                                    prepareTable(object);
 
-                            SerializedData data = new SerializedData();
-                            object.serialize(data);
+                                SerializedData data = new SerializedData();
+                                object.serialize(data);
 
-                            JsonObject jsonObject = data.getJsonElement().getAsJsonObject();
-                            JsonElement[] jsonElements = new JsonElement[object.getStructure().length];
-                            for (int i = 0; i < object.getStructure().length; i++) {
-                                JsonElement element = jsonObject.get(object.getStructure()[i]);
-                                jsonElements[i] = Objects.requireNonNull(element, "Failed to find '" + object.getStructure()[i] + "' field inside serialized data of " + object.getClass().getName());
+                                JsonObject jsonObject = data.getJsonElement().getAsJsonObject();
+                                JsonElement[] jsonElements = new JsonElement[object.getStructure().length];
+                                for (int i = 0; i < object.getStructure().length; i++) {
+                                    JsonElement element = jsonObject.get(object.getStructure()[i]);
+                                    jsonElements[i] = Objects.requireNonNull(element, "Failed to find '" + object.getStructure()[i] + "' field inside serialized data of " + object.getClass().getName());
+                                }
+
+                                String primaryKey = object.getKey();
+                                if (database.isPrimaryKeyUsed(findVariantNameFor(object.getClass()), object.getStructure(), primaryKey))
+                                    updateObject(object, primaryKey, jsonObject);
+
+                                else
+                                    insertObject(object, primaryKey, jsonObject);
+                            } catch (Throwable throwable) {
+                                throwable.printStackTrace();
                             }
+                        });
+                    }));
+                }
 
-                            String primaryKey = object.getKey();
-                            if (database.isPrimaryKeyUsed(findVariantNameFor(object.getClass()), object.getStructure(), primaryKey))
-                                updateObject(object, primaryKey, jsonObject);
+                JobsResult jobsResult = acquire.startAndWait();
+                try {
+                    database.getConnection().commit();
+                    database.getConnection().setAutoCommit(true);
+                } catch (SQLException throwables) {
+                    throwables.printStackTrace();
+                }
 
-                            else
-                                insertObject(object, primaryKey, jsonObject);
-                        } catch (Throwable throwable) {
-                            throwable.printStackTrace();
-                        }
-                    });
-                }));
+                if (callback != null)
+                    callback.run();
             }
-
-            JobsResult jobsResult = acquire.startAndWait();
-            try {
-                database.getConnection().commit();
-                database.getConnection().setAutoCommit(true);
-            } catch (SQLException throwables) {
-                throwables.printStackTrace();
-            }
-
-            if (callback != null)
-                callback.run();
         });
     }
 
     @Override
-    public synchronized void load(boolean async, Runnable callback) {
+    public void load(boolean async, Runnable callback) {
         Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
 
         runner.accept(() -> {
