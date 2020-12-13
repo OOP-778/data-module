@@ -8,7 +8,9 @@ import lombok.NonNull;
 
 import java.io.File;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public class JsonProvider implements StorageProvider<File> {
@@ -46,10 +48,13 @@ public class JsonProvider implements StorageProvider<File> {
         }
 
         @Override
-        protected Map<String, Class<T>> getVariants() {
+        public Map<String, Class<T>> getVariants() {
             return linker.getVariants();
         }
+
+        @Override
+        protected List<Consumer<Storage<T>>> getOnLoad() {
+            return linker.getOnLoad();
+        }
     }
-
-
 }

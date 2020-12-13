@@ -88,39 +88,45 @@ public abstract class JsonStorage<T extends ModelBody> extends Storage<T> {
             Set<DataPair<T, File>> loadedData = ConcurrentHashMap.newKeySet();
 
             JobsRunner acquire = JobsRunner.acquire();
-            for (File file : Objects.requireNonNull(directory.listFiles())) {
-                acquire.addJob(new Job() {
-                    @Override
-                    public String getName() {
-                        return file.getName();
-                    }
+            for (String s : getVariants().keySet()) {
+                File variantDirectory = new File(directory + "/" + s);
+                if (!variantDirectory.exists())
+                    variantDirectory.mkdirs();
 
-                    @Override
-                    public void run() {
-                        try {
-                            BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
-                            JsonObject jsonObject = prettifiedGson.fromJson(reader, JsonObject.class);
-                            reader.close();
-                            if (jsonObject == null) return;
-
-                            SerializedData data = new SerializedData(jsonObject);
-                            Optional<SerializedData> type = data.getChildren(getTypeVar());
-                            if (!type.isPresent())
-                                throw new IllegalAccessException("Failed to find type in serialized data. Data is outdated!");
-
-                            Class<? extends T> clazz = getVariants().get(type.get().applyAs());
-                            Constructor<? extends T> constructor = getConstructor(Objects.requireNonNull(clazz, "Failed to find clazz for serialized type: " + type.get().applyAs()));
-
-                            T object = constructor.newInstance();
-                            object.deserialize(data);
-
-                            loadedData.add(new DataPair<>(object, file));
-                            loadObjectCache(object.getKey(), data);
-                        } catch (Throwable throwable) {
-                            throw new IllegalStateException("Failed to load object at file: " + file.getParentFile().getName() + "/" + file.getName(), throwable);
+                for (File file : Objects.requireNonNull(variantDirectory.listFiles())) {
+                    acquire.addJob(new Job() {
+                        @Override
+                        public String getName() {
+                            return file.getName();
                         }
-                    }
-                });
+
+                        @Override
+                        public void run() {
+                            try {
+                                BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
+                                JsonObject jsonObject = prettifiedGson.fromJson(reader, JsonObject.class);
+                                reader.close();
+                                if (jsonObject == null) return;
+
+                                SerializedData data = new SerializedData(jsonObject);
+                                Optional<SerializedData> type = data.getChildren(getTypeVar());
+                                if (!type.isPresent())
+                                    throw new IllegalAccessException("Failed to find type in serialized data. Data is outdated!");
+
+                                Class<? extends T> clazz = getVariants().get(type.get().applyAs());
+                                Constructor<? extends T> constructor = getConstructor(Objects.requireNonNull(clazz, "Failed to find clazz for serialized type: " + type.get().applyAs()));
+
+                                T object = constructor.newInstance();
+                                object.deserialize(data);
+
+                                loadedData.add(new DataPair<>(object, file));
+                                loadObjectCache(object.getKey(), data);
+                            } catch (Throwable throwable) {
+                                throw new IllegalStateException("Failed to load object at file: " + file.getParentFile().getName() + "/" + file.getName(), throwable);
+                            }
+                        }
+                    });
+                }
             }
 
             JobsResult jobsResult = acquire.startAndWait();
@@ -156,7 +162,13 @@ public abstract class JsonStorage<T extends ModelBody> extends Storage<T> {
 
     @Override
     protected JsonModelLock<T> getLock(T object) {
-        return (JsonModelLock<T>) getLockMap().computeIfAbsent(object.getKey(), k -> new JsonModelLock<>(object, new File(directory, object.getKey() + ".json"), this));
+        return (JsonModelLock<T>) getLockMap().computeIfAbsent(object.getKey(), k -> {
+            File variantDirectory = new File(directory + "/" + findVariantNameFor(object.getClass()));
+            if (!variantDirectory.exists())
+                variantDirectory.mkdirs();
+
+            return new JsonModelLock<>(object, new File(variantDirectory, object.getKey() + ".json"), this);
+        });
     }
 
     public static Gson getPrettifiedGson() {
