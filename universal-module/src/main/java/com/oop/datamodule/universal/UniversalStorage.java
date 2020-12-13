@@ -7,6 +7,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NonNull;
 
+import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -57,5 +58,10 @@ public abstract class UniversalStorage<T extends UniversalBodyModel> extends Sto
     @Override
     public void remove(T object) {
         currentImplementation.remove(object);
+    }
+
+    @Override
+    public List<Consumer<Storage<T>>> getOnLoad() {
+        return super.getOnLoad();
     }
 }

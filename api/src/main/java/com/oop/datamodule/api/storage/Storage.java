@@ -34,7 +34,7 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
     @Getter(AccessLevel.PROTECTED)
     private final List<Consumer<Storage<T>>> onLoad = new LinkedList<>();
 
-    @Getter(AccessLevel.PROTECTED)
+    @Getter
     private final Map<String, Class<T>> variants = new HashMap<>();
 
     public Storage(

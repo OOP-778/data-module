@@ -18,6 +18,10 @@ import java.util.function.Consumer;
 public class StorageInitializer {
     private static StorageInitializer instance;
 
+    public void onDisable() {
+        instance = null;
+    }
+
     public static StorageInitializer getInstance() {
         Objects.requireNonNull(instance, "StorageInitializer hasn't been setup!");
         return instance;
