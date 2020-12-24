@@ -4,7 +4,7 @@ plugins {
     `maven-publish`
 }
 
-version = "1.7"
+version = "1.8"
 
 var props: MutableMap<String, ProjectConfig> = hashMapOf()
 loadProjects()
@@ -50,8 +50,6 @@ subprojects {
             shadowJar {
                 archiveFileName.set("${it.name}.jar")
                 destinationDirectory.set(file("out"))
-
-                //relocate("org", "com.oop.datamodule.lib")
 
                 relocate("google", "com.oop.datamodule.lib")
                 relocate("com.google", "com.oop.datamodule.lib.google")

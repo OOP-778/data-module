@@ -17,7 +17,6 @@ public class JsonModelLock<T extends ModelBody> extends ModelLock<T> {
 
     @Getter
     private final File file;
-
     private final JsonStorage<T> storage;
 
     public JsonModelLock(@NonNull T object, File file, JsonStorage<T> storage) {
