@@ -6,6 +6,7 @@ dependencies {
     implementation(project(":json-module"))
     implementation(project(":common-sql"))
     implementation(project(":mongodb-module"))
+    implementation(project(":postgresql-module"))
     compileOnly("org.mongodb:mongo-java-driver:3.12.2")
     compileOnly("com.google.code.gson:gson:2.8.6")
 }

@@ -16,10 +16,14 @@ public class MySQLDatabase extends SQLDatabase {
         credential = props;
     }
 
+    private Connection connection;
+
     @Override
     protected Connection provideConnection() throws SQLException {
-        Connection conn = DriverManager.getConnection(credential.toURL(), credential.username(), credential.password());
-        return conn;
+        if (connection == null || connection.isClosed())
+            connection = DriverManager.getConnection(credential.toURL(), credential.username(), credential.password());
+
+        return connection;
     }
 
     @Override

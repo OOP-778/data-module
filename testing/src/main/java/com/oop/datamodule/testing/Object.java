@@ -71,7 +71,8 @@ public class Object implements UniversalBodyModel {
     public String[] getStructure() {
         return new String[]{
                 "uuid",
-                "coins"
+                "coins",
+                "sub"
         };
     }
 

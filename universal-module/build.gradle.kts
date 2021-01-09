@@ -3,6 +3,7 @@ dependencies {
     implementation(project(":sqlite-module"))
     implementation(project(":mysql-module"))
     implementation(project(":json-module"))
+    implementation(project(":postgresql-module"))
     compileOnly(project(":common-sql"))
     implementation(project(":mongodb-module"))
     compileOnly("org.mongodb:mongo-java-driver:3.12.2")

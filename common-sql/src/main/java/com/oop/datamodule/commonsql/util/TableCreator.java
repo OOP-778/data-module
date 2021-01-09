@@ -10,7 +10,6 @@ public class TableCreator {
     private final SQLDatabase database;
     private String name;
     private final List<DataPair<String, String>> columns = new LinkedList<>();
-
     private DataPair<String, String> primaryKey;
 
     public TableCreator(SQLDatabase database) {

@@ -4,6 +4,7 @@ import com.oop.datamodule.api.StorageInitializer;
 import com.oop.datamodule.api.StorageRegistry;
 import com.oop.datamodule.mongodb.MongoCredential;
 import com.oop.datamodule.mysql.MySQLCredential;
+import com.oop.datamodule.postgresql.PostgreSQLCredential;
 import com.oop.datamodule.universal.StorageProviders;
 
 import java.util.UUID;
@@ -21,29 +22,18 @@ public class Testing {
         ObjectStorage objects = new ObjectStorage(registry);
         objects.currentImplementation(
                 StorageProviders
-                        .MONGO_DB
-                        .provide(
-                                objects.getLinker(),
-                                new MongoCredential()
-                                        .connectionUri("...")
-                                        .database("admin")
-                                        .build()
+                .POSTGRE
+                .provide(
+                        objects.getLinker(),
+                        new PostgreSQLCredential()
+                            .database("postgres")
+                            .hostname("localhost")
+                            .username("postgres")
+                            .password("Pavilas45")
                         )
         );
         objects.load();
 
-        objects.currentImplementation(
-                StorageProviders
-                        .MYSQL
-                        .provide(
-                                objects.getLinker(),
-                                new MySQLCredential()
-                        )
-        );
-        objects.load();
-
-
-        objects.add(new Object(UUID.randomUUID()));
         objects.stream()
                 .forEach(ob -> {
                     ob.getCounts().add(2);

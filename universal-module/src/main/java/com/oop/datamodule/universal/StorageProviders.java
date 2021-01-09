@@ -4,6 +4,7 @@ import com.oop.datamodule.universal.provider.JsonProvider;
 import com.oop.datamodule.universal.provider.MongoDBProvider;
 import com.oop.datamodule.universal.provider.StorageProvider;
 import com.oop.datamodule.universal.provider.sql.MySQLProvider;
+import com.oop.datamodule.universal.provider.sql.PostgreSQLProvider;
 import com.oop.datamodule.universal.provider.sql.SQLiteProvider;
 
 import java.lang.reflect.Field;
@@ -16,6 +17,7 @@ public class StorageProviders {
     public static final SQLiteProvider SQLITE = new SQLiteProvider();
     public static final MySQLProvider MYSQL = new MySQLProvider();
     public static final JsonProvider JSON = new JsonProvider();
+    public static final PostgreSQLProvider POSTGRE = new PostgreSQLProvider();
 
     private static final Map<String, StorageProvider> byName = new HashMap<>();
 
