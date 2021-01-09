@@ -12,14 +12,20 @@ import lombok.SneakyThrows;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.InflaterInputStream;
 
 public class StorageImporter {
-    private List<Storage<? extends ModelBody>> storages = new ArrayList<>();
+    private List<Storage> storages = new ArrayList<>();
 
-    public StorageImporter(List<Storage<ModelBody>> storages) {
+    public StorageImporter(List<Storage> storages) {
         this.storages.addAll(storages);
+    }
+
+    public StorageImporter(Storage... storages) {
+        this(Arrays.asList(storages));
     }
 
     public StorageImporter(StorageRegistry registry) {
@@ -28,15 +34,19 @@ public class StorageImporter {
 
     @SneakyThrows
     public Map<String, List<ModelBody>> importData(File file) {
+        if (!file.getName().endsWith("datapack"))
+            file = new File(file.getParentFile(), file.getName() + ".datapack");
+
         Preconditions.checkArgument(file.exists(), "Failed to import data from " + file.getName() + " cause it doesn't exist!");
 
         FileInputStream stream = new FileInputStream(file);
-        GZIPInputStream inputStream = new GZIPInputStream(stream);
+        InflaterInputStream inputStream = new InflaterInputStream(stream);
 
         final Map<String, List<ModelBody>> deserializedData = new HashMap<>();
         try {
-            while (inputStream.available() != 0) {
-                BytesBuffer bytesBuffer = BytesBuffer.fromStream(inputStream);
+            byte[] size = new byte[4];
+            while(inputStream.read(size) != -1) {
+                BytesBuffer bytesBuffer = BytesBuffer.fromStream(inputStream, size);
                 if (bytesBuffer == null) continue;
 
                 String key = bytesBuffer.readString();
@@ -58,7 +68,10 @@ public class StorageImporter {
                     JsonObject jsonObject = StorageInitializer.getInstance().getGson().fromJson(variantDatum, JsonObject.class);
                     SerializedData data = new SerializedData(jsonObject);
 
-                    ModelBody object = modelBodyClass.getDeclaredConstructor().newInstance();
+                    Constructor<ModelBody> constructor = modelBodyClass.getDeclaredConstructor();
+                    constructor.setAccessible(true);
+
+                    ModelBody object = constructor.newInstance();
                     object.deserialize(data);
 
                     deserializedData

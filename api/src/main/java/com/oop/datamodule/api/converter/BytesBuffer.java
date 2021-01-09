@@ -103,20 +103,15 @@ public class BytesBuffer {
     public void append(OutputStream outputStream) {
         // Merge the size of this buffer & data
         byte[] merged = mergeBytes(ByteBuffer.allocate(SIZE_OF_INT).putInt(data.length).array(), data);
+        System.out.println("size: " + data.length);
         outputStream.write(merged);
         merged = new byte[0];
     }
 
     @SneakyThrows
-    public static BytesBuffer fromStream(InputStream stream) {
-        if (stream.available() < 4) return null;
-        ByteBuffer sizeBuffer = ByteBuffer.allocate(SIZE_OF_INT);
-        stream.read(sizeBuffer.array(), 0, 4);
-
-        byte[] data = new byte[sizeBuffer.getInt()];
+    public static BytesBuffer fromStream(InputStream stream, byte[] size) {
+        byte[] data = new byte[ByteBuffer.wrap(size).getInt()];
         stream.read(data, 0, data.length);
-        sizeBuffer.clear();
-
 
         return new BytesBuffer(data);
     }

@@ -13,13 +13,18 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.zip.DeflaterOutputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class StorageExporter {
-    private final List<Storage<? extends ModelBody>> storageList = new ArrayList<>();
+    private final List<Storage> storageList = new ArrayList<>();
 
-    public StorageExporter(List<Storage<ModelBody>> storages) {
+    public StorageExporter(List<Storage> storages) {
         this.storageList.addAll(storages);
+    }
+
+    public StorageExporter(Storage ...storages) {
+        this(Arrays.asList(storages));
     }
 
     public StorageExporter(StorageRegistry registry) {
@@ -29,7 +34,11 @@ public class StorageExporter {
     @SneakyThrows
     public void export(File directory, String name) {
         File exportFile = new File(directory, name + ".datapack");
-        if (exportFile.exists())
+
+        if (!directory.exists())
+            directory.mkdirs();
+
+        if (!exportFile.exists())
             exportFile.delete();
 
         // Variant Name ~ 4 bytes
@@ -47,7 +56,7 @@ public class StorageExporter {
             }
         }
 
-        GZIPOutputStream outputStream = new GZIPOutputStream(new FileOutputStream(exportFile));
+        DeflaterOutputStream outputStream = new DeflaterOutputStream(new FileOutputStream(exportFile));
 
         BytesBuffer buffer = new BytesBuffer();
         objectsByVariants.forEach((key, objects) -> {
@@ -56,7 +65,7 @@ public class StorageExporter {
                 buffer.writeString(key);
 
                 // Write objects
-                buffer.writeList(objects, object -> object.getBytes(StandardCharsets.UTF_8));
+                buffer.writeList(objects, buffer::writeString);
 
                 // Write object
                 buffer.append(outputStream);
