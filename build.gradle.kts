@@ -4,7 +4,7 @@ plugins {
     `maven-publish`
 }
 
-version = "1.8"
+version = "1.9"
 
 var props: MutableMap<String, ProjectConfig> = hashMapOf()
 loadProjects()

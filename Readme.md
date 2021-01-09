@@ -6,6 +6,7 @@ Simple, Effective to use data module that supports
 - SQLite
 - Json Flat Files
 - MongoDB
+- PostgreSQL
 
 ## Artifacts
 - universal
@@ -18,6 +19,8 @@ Simple, Effective to use data module that supports
   - comes only with flat file module
 - mongodb
   - comes only with mongodb module
+- postgresql
+  - comes only with postgresql
 
 ## Maven
 ```xml
