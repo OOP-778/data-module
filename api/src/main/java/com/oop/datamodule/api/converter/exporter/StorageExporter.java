@@ -1,20 +1,18 @@
 package com.oop.datamodule.api.converter.exporter;
 
-import com.oop.datamodule.api.SerializableObject;
 import com.oop.datamodule.api.SerializedData;
 import com.oop.datamodule.api.StorageInitializer;
 import com.oop.datamodule.api.StorageRegistry;
-import com.oop.datamodule.api.converter.BytesBuffer;
+import com.oop.datamodule.api.converter.BytesWriter;
 import com.oop.datamodule.api.model.ModelBody;
 import com.oop.datamodule.api.storage.Storage;
 import lombok.SneakyThrows;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.zip.DeflaterOutputStream;
-import java.util.zip.GZIPOutputStream;
 
 public class StorageExporter {
     private final List<Storage> storageList = new ArrayList<>();
@@ -23,7 +21,7 @@ public class StorageExporter {
         this.storageList.addAll(storages);
     }
 
-    public StorageExporter(Storage ...storages) {
+    public StorageExporter(Storage... storages) {
         this(Arrays.asList(storages));
     }
 
@@ -56,29 +54,35 @@ public class StorageExporter {
             }
         }
 
-        DeflaterOutputStream outputStream = new DeflaterOutputStream(new FileOutputStream(exportFile));
+        AtomicLong size = new AtomicLong();
+        FileOutputStream outputStream = new FileOutputStream(exportFile);
+        DeflaterOutputStream output = new DeflaterOutputStream(outputStream);
 
-        BytesBuffer buffer = new BytesBuffer();
+        AtomicLong exported = new AtomicLong(0);
+
+        BytesWriter writer = new BytesWriter();
         objectsByVariants.forEach((key, objects) -> {
             try {
                 // Write variant
-                buffer.writeString(key);
+                writer.writeString(key);
 
                 // Write objects
-                buffer.writeList(objects, buffer::writeString);
+                writer.writeList(objects, writer::writeString);
 
                 // Write object
-                buffer.append(outputStream);
+                byte[] done = writer.done();
 
-                // Cleanup
-                buffer.clear();
+                size.addAndGet(done.length);
 
+                exported.addAndGet(objects.size());
+
+                output.write(done);
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
             }
         });
 
-        outputStream.flush();
-        outputStream.close();
+        output.flush();
+        output.close();
     }
 }

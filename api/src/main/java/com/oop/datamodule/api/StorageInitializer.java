@@ -123,6 +123,7 @@ public class StorageInitializer {
         if (gson == null) {
             GsonBuilder builder = new GsonBuilder();
             builder.serializeNulls();
+            builder.disableHtmlEscaping();
             if (onBuild != null)
                 onBuild.accept(builder);
             gson = builder.create();
@@ -135,6 +136,7 @@ public class StorageInitializer {
         GsonBuilder builder = new GsonBuilder();
         builder.serializeNulls();
         builder.setPrettyPrinting();
+        builder.disableHtmlEscaping();
         if (onBuild != null)
             onBuild.accept(builder);
 

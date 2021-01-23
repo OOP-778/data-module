@@ -28,7 +28,7 @@ public class StorageRegistry implements Loadable, Saveable {
                 .findFirst();
     }
 
-    public <T extends Storage<ModelBody>> T getStorage(Class<T> clazz) {
+    public <T extends Storage> T getStorage(Class<T> clazz) {
         return (T) storages.stream().filter(storage -> storage.getClass() == clazz).findFirst().orElse(null);
     }
 

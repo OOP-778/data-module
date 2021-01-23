@@ -4,17 +4,15 @@ import com.google.gson.JsonObject;
 import com.oop.datamodule.api.SerializedData;
 import com.oop.datamodule.api.StorageInitializer;
 import com.oop.datamodule.api.StorageRegistry;
-import com.oop.datamodule.api.converter.BytesBuffer;
+import com.oop.datamodule.api.converter.BytesReader;
 import com.oop.datamodule.api.model.ModelBody;
 import com.oop.datamodule.api.storage.Storage;
 import com.oop.datamodule.api.util.Preconditions;
 import lombok.SneakyThrows;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 import java.lang.reflect.Constructor;
 import java.util.*;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.InflaterInputStream;
 
 public class StorageImporter {
@@ -42,18 +40,16 @@ public class StorageImporter {
         FileInputStream stream = new FileInputStream(file);
         InflaterInputStream inputStream = new InflaterInputStream(stream);
 
+        byte[] read = readAllBytes(inputStream);
+        BytesReader reader = new BytesReader(read);
+
         final Map<String, List<ModelBody>> deserializedData = new HashMap<>();
         try {
-            byte[] size = new byte[4];
-            while(inputStream.read(size) != -1) {
-                BytesBuffer bytesBuffer = BytesBuffer.fromStream(inputStream, size);
-                if (bytesBuffer == null) continue;
-
-                String key = bytesBuffer.readString();
+            while (!reader.isEmpty()) {
+                String key = reader.readString();
 
                 List<String> variantData = new ArrayList<>();
-                bytesBuffer.readList(variantData, bytesBuffer::readString);
-                bytesBuffer.clear();
+                reader.readList(variantData, reader::readString);
 
                 Class<ModelBody> modelBodyClass = null;
                 for (Storage<? extends ModelBody> storage : storages) {
@@ -87,5 +83,31 @@ public class StorageImporter {
         }
 
         return deserializedData;
+    }
+
+    public static byte[] readAllBytes(InputStream inputStream) throws IOException {
+        final int bufLen = 4 * 0x400; //
+        byte[] buf = new byte[bufLen];
+        int readLen;
+        IOException exception = null;
+
+        try {
+            try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+                while ((readLen = inputStream.read(buf, 0, bufLen)) != -1)
+                    outputStream.write(buf, 0, readLen);
+
+                return outputStream.toByteArray();
+            }
+        } catch (IOException e) {
+            exception = e;
+            throw e;
+        } finally {
+            if (exception == null) inputStream.close();
+            else try {
+                inputStream.close();
+            } catch (IOException e) {
+                exception.addSuppressed(e);
+            }
+        }
     }
 }
