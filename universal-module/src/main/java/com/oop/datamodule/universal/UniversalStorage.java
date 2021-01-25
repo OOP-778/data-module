@@ -35,7 +35,16 @@ public abstract class UniversalStorage<T extends UniversalBodyModel> extends Sto
         super(storageRegistry);
     }
 
+    @Override
+    public void shutdown() {
+        if (currentImplementation == null) return;
+        currentImplementation.shutdown();
+    }
+
     public UniversalStorage<T> currentImplementation(Storage<T> storage) {
+        if (currentImplementation != null)
+            currentImplementation.shutdown();
+
         this.currentImplementation = storage;
         return this;
     }

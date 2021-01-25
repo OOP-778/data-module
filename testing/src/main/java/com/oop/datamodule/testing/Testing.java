@@ -21,12 +21,6 @@ public class Testing {
     public static void main(String[] args) {
         StorageRegistry registry = new StorageRegistry();
 
-        StorageInitializer.initialize(
-                Runnable::run,
-                Runnable::run,
-                null
-        );
-
         ObjectStorage objects = new ObjectStorage(registry);
         objects.currentImplementation(
                 StorageProviders

@@ -3,17 +3,18 @@ package com.oop.datamodule.api;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
+import com.oop.datamodule.api.loader.Library;
+import com.oop.datamodule.api.loader.LibraryManager;
+import com.oop.datamodule.api.loader.StorageDependencies;
 import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.api.util.Preconditions;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class StorageInitializer {
     private static StorageInitializer instance;
@@ -33,13 +34,16 @@ public class StorageInitializer {
      * @param syncRunner consumer which runs sync tasks
      * @param onBuild can be nullable, you can consume GsonBuilder to add own params
      * @param errorHandler whenever error is thrown, it will go thru this
+     * @param dependencies dependencies that storages uses
      * @return a pair of StorageInitializer instance and hook to run when application shut downs to clean instance
      */
     public static DataPair<StorageInitializer, Runnable> initialize(
             @NonNull Consumer<Runnable> asyncRunner,
             @NonNull Consumer<Runnable> syncRunner,
+            @NonNull LibraryManager libraryManager,
             Consumer<GsonBuilder> onBuild,
-            Consumer<Throwable> errorHandler
+            Consumer<Throwable> errorHandler,
+            @NonNull StorageDependencies ...dependencies
     ) {
         Preconditions.checkArgument(instance == null, "Instance of StorageInitializer already exists!");
         instance = new StorageInitializer();
@@ -47,37 +51,29 @@ public class StorageInitializer {
         instance.syncRunner = syncRunner;
         instance.onBuild = onBuild;
         instance.errorHandler = errorHandler;
+        instance.loadLibraries(libraryManager, dependencies);
 
         return new DataPair<>(instance, () -> instance = null);
     }
 
-    public static DataPair<StorageInitializer, Runnable> initialize(
-            @NonNull Consumer<Runnable> asyncRunner,
-            @NonNull Consumer<Runnable> syncRunner,
-            Consumer<GsonBuilder> onBuild
-    ) {
-        Preconditions.checkArgument(instance == null, "Instance of StorageInitializer already exists!");
-        instance = new StorageInitializer();
-        instance.asyncRunner = asyncRunner;
-        instance.syncRunner = syncRunner;
-        instance.onBuild = onBuild;
-        instance.errorHandler = Throwable::printStackTrace;
+    private void loadLibraries(LibraryManager libraryManager, StorageDependencies ...dependencies) {
+        libraryManager.addJCenter();
 
-        return new DataPair<>(instance, () -> instance = null);
-    }
+        Set<Library> libraries = Arrays
+                .stream(dependencies)
+                .flatMap(d -> d.getLibraries().stream())
+                .collect(Collectors.toCollection(HashSet::new));
 
-    public static DataPair<StorageInitializer, Runnable> initialize(
-            @NonNull Consumer<Runnable> asyncRunner,
-            @NonNull Consumer<Runnable> syncRunner
-    ) {
-        Preconditions.checkArgument(instance == null, "Instance of StorageInitializer already exists!");
-        instance = new StorageInitializer();
-        instance.asyncRunner = asyncRunner;
-        instance.syncRunner = syncRunner;
-        instance.onBuild = null;
-        instance.errorHandler = Throwable::printStackTrace;
+        Set<String> repos = Arrays
+                .stream(dependencies)
+                .flatMap(d -> d.getRepositories().stream())
+                .collect(Collectors.toCollection(HashSet::new));
 
-        return new DataPair<>(instance, () -> instance = null);
+        for (String repo : repos)
+            libraryManager.addRepository(repo);
+
+        for (Library library : libraries)
+            libraryManager.loadLibrary(library);
     }
 
     private Consumer<Runnable> asyncRunner;
