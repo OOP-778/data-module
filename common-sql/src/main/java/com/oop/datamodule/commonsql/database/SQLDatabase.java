@@ -6,19 +6,29 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static com.oop.datamodule.commonsql.util.SqlUtil.escapeColumn;
 
 @Getter
 public abstract class SQLDatabase {
-    private Connection connection;
+
+    private Map<String, Connection> threadConnections = new ConcurrentHashMap<>();
+
     protected abstract Connection provideConnection() throws Throwable;
 
     public abstract String getType();
 
-    public Connection getConnection() {
+    public synchronized Connection getConnection() {
+        Connection connection = threadConnections.get(Thread.currentThread().getName());
         try {
             if (connection == null || connection.isClosed()) {
                 connection = provideConnection();
+                threadConnections.put(Thread.currentThread().getName(), connection);
             }
         } catch (Throwable throwable) {
             throw new IllegalStateException("Failed to get connection. Perhaps incorrect params?", throwable);
@@ -74,7 +84,7 @@ public abstract class SQLDatabase {
         if (!primaryKey.endsWith("\"") && !primaryKey.startsWith("\""))
             primaryKey = "\"" + primaryKey + "\"";
 
-        try (PreparedStatement preparedStatement = getConnection().prepareStatement("SELECT " + structure[0] + " from " + table + " where " + structure[0] + " = '" + primaryKey + "'")) {
+        try (PreparedStatement preparedStatement = getConnection().prepareStatement("SELECT " + escapeColumn(structure[0]) + " from " + table + " where " + escapeColumn(structure[0]) + " = '" + primaryKey + "'")) {
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 return resultSet.next() && resultSet.getObject(1) != null;
             }
@@ -91,7 +101,7 @@ public abstract class SQLDatabase {
                 int i = 1;
                 List<DataPair<String, String>> data = new LinkedList<>();
                 for (String column : structure) {
-                    data.add(new DataPair<>(column, rs.getString(i)));
+                    data.add(new DataPair<>(rs.getMetaData().getColumnName(i), rs.getString(i)));
                     i++;
                 }
                 allData.add(data);
@@ -105,10 +115,17 @@ public abstract class SQLDatabase {
         if (!primaryKey.startsWith("\""))
             primaryKey = "\"" + primaryKey + "\"";
 
-        getConnection().createStatement().execute("DELETE FROM " + table + " WHERE " + structure[0] + " = '" + primaryKey + "'");
+        getConnection().createStatement().execute("DELETE FROM " + table + " WHERE " + escapeColumn(structure[0]) + " = '" + primaryKey + "'");
     }
 
-    public abstract void renameColumn(String table, DataPair<String, String> ...pairs);
+    public abstract void renameColumn(String table, DataPair<String, String>... pairs);
 
-    public abstract void dropColumn(String table, String ...columns);
+    public abstract void dropColumn(String table, String... columns);
+
+    @SneakyThrows
+    public void shutdown() {
+        for (Connection value : getThreadConnections().values()) {
+            value.close();
+        }
+    }
 }

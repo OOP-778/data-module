@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    implementation("mysql:mysql-connector-java:8.0.21") {
+    compileOnly("mysql:mysql-connector-java:8.0.21") {
         exclude("com.google.protobuf", "protobuf-java")
     }
     implementation(project(":common-sql"))

@@ -33,9 +33,11 @@ public class TableEditor {
         if (!database.getTables().contains(table)) return;
 
         // Add columns
-        for (DataPair<String, String> column : addColumns)
-            if (!database.getColumns(table).contains(column.getKey()))
+        for (DataPair<String, String> column : addColumns) {
+            List<String> columns = database.getColumns(table);
+            if (!columns.contains(column.getKey()))
                 database.execute("ALTER TABLE " + table + " ADD " + column.getKey() + " " + column.getValue());
+        }
 
         // Rename columns
         if (!renamedColumns.isEmpty())

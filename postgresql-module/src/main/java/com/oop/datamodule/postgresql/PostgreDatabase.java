@@ -34,7 +34,7 @@ public class PostgreDatabase extends SQLDatabase {
         List<String> columns = getColumns(table);
         for (String dropsColumn : dropsColumns) {
             if (!columns.contains(dropsColumn)) continue;
-            execute("ALTER TABLE " + table + "DROP COLUMN " + dropsColumn);
+            execute("ALTER TABLE " + table + " DROP COLUMN " + dropsColumn);
         }
     }
 

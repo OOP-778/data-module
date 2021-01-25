@@ -15,6 +15,7 @@ import com.oop.datamodule.api.util.job.JobsRunner;
 import com.oop.datamodule.commonsql.model.SqlModelBody;
 import com.oop.datamodule.commonsql.database.SQLDatabase;
 import com.oop.datamodule.commonsql.util.Column;
+import com.oop.datamodule.commonsql.util.SqlUtil;
 import com.oop.datamodule.commonsql.util.TableCreator;
 import com.oop.datamodule.commonsql.util.TableEditor;
 import lombok.Getter;
@@ -29,6 +30,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.oop.datamodule.commonsql.util.SqlUtil.escapeColumn;
 
 public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
     private final Set<String> preparedTables = ConcurrentHashMap.newKeySet();
@@ -126,6 +129,11 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
                     callback.run();
             }
         });
+    }
+
+    @Override
+    public void shutdown() {
+        getDatabase().shutdown();
     }
 
     @Override
@@ -246,7 +254,7 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
     @SneakyThrows
     private PreparedStatement createInsertStatement(String tableName, String[] structure) {
         StringBuilder builder = new StringBuilder();
-        builder.append("INSERT INTO ").append(tableName).append(" (").append(String.join(",", structure)).append(") VALUES (");
+        builder.append("INSERT INTO ").append(tableName).append(" (").append(Arrays.stream(structure).map(SqlUtil::escapeColumn).collect(Collectors.joining(","))).append(") VALUES (");
         builder.append(Arrays.stream(structure).map(s -> "?").collect(Collectors.joining(",")));
         builder.append(")");
         return database.getConnection().prepareStatement(builder.toString());
@@ -296,7 +304,7 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
                 builder.append(", ");
 
             } else first = false;
-            builder.append(column).append(" = ?");
+            builder.append(escapeColumn(column)).append(" = ?");
         }
 
         builder.append(" WHERE ").append(pkColumn).append(" = ?");

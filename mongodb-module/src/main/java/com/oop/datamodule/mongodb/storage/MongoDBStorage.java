@@ -38,6 +38,9 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
         this.database = database;
     }
 
+    @Override
+    public void shutdown() {}
+
     public MongoDBStorage(
             StorageRegistry storageRegistry,
             @NonNull MongoDatabase database

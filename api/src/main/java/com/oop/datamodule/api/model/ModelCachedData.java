@@ -11,7 +11,7 @@ public class ModelCachedData {
     }
 
     public void add(String field, String data) {
-        cache.put(field, data.hashCode());
+        cache.put(field, hashString(data));
     }
 
     public boolean isEmpty() {
@@ -19,15 +19,25 @@ public class ModelCachedData {
     }
 
     public boolean isUpdated(String field, String newData) {
+        int newDataHash = hashString(newData);
+
         Integer hash = cache.get(field);
         if (hash == null) {
-            cache.put(field, newData.hashCode());
+            cache.put(field, newDataHash);
             return true;
         }
-        if (hash == newData.hashCode()) return false;
+        if (hash == newDataHash) return false;
 
         cache.remove(field);
-        cache.put(field, newData.hashCode());
+        cache.put(field, newDataHash);
         return true;
+    }
+
+    private int hashString(String data) {
+        int hash = 0;
+        for (char c : data.toCharArray())
+            hash += Character.hashCode(c);
+
+        return hash;
     }
 }

@@ -45,6 +45,11 @@ public abstract class JsonStorage<T extends ModelBody> extends Storage<T> {
             directory.mkdirs();
     }
 
+    @Override
+    public void shutdown() {
+
+    }
+
     public JsonStorage(StorageRegistry storageRegistry, File directory) {
         this(storageRegistry, directory, true);
     }

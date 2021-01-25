@@ -53,8 +53,6 @@ subprojects {
 
                 relocate("google", "com.oop.datamodule.lib")
                 relocate("com.google", "com.oop.datamodule.lib.google")
-                relocate("com.mysql", "com.oop.datamodule.lib.mysql")
-                relocate("com.mongodb", "com.oop.datamodule.lib.mongodb")
             }
         }
 

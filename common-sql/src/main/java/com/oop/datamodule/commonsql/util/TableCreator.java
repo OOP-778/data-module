@@ -6,6 +6,8 @@ import com.oop.datamodule.commonsql.database.SQLDatabase;
 import java.util.LinkedList;
 import java.util.List;
 
+import static com.oop.datamodule.commonsql.util.SqlUtil.escapeColumn;
+
 public class TableCreator {
     private final SQLDatabase database;
     private String name;
@@ -45,24 +47,41 @@ public class TableCreator {
 
         if (primaryKey != null) {
             if (database.getType().equalsIgnoreCase("SQLITE")) {
-                queryBuilder.append(primaryKey.getKey()).append(" ").append(primaryKey.getValue()).append(" PRIMARY KEY, ");
+                queryBuilder
+                        .append(primaryKey.getKey())
+                        .append(" ")
+                        .append(primaryKey.getValue())
+                        .append(" PRIMARY KEY, ");
 
             } else
-                queryBuilder.append(primaryKey.getKey()).append(" VARCHAR(255)").append(", ");
+                queryBuilder
+                        .append(escapeColumn(primaryKey.getKey()))
+                        .append(" VARCHAR(255)")
+                        .append(", ");
         }
 
         boolean first = true;
         for (DataPair<String, String> columnPair : columns) {
             if (first) {
-                queryBuilder.append(columnPair.getKey()).append(" ").append(columnPair.getValue());
+                queryBuilder
+                        .append(escapeColumn(columnPair.getKey()))
+                        .append(" ")
+                        .append(columnPair.getValue());
                 first = false;
 
             } else
-                queryBuilder.append(", ").append(columnPair.getKey()).append(" ").append(columnPair.getValue());
+                queryBuilder
+                        .append(", ")
+                        .append(escapeColumn(columnPair.getKey()))
+                        .append(" ")
+                        .append(columnPair.getValue());
         }
 
         if (primaryKey != null && !(database.getType().equalsIgnoreCase("SQLITE")))
-            queryBuilder.append(", PRIMARY KEY (").append(primaryKey.getKey()).append(")");
+            queryBuilder
+                    .append(", PRIMARY KEY (")
+                    .append(primaryKey.getKey())
+                    .append(")");
 
         queryBuilder.append(")");
         database.execute(queryBuilder.toString());
