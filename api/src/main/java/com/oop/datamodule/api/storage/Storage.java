@@ -75,6 +75,8 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
 
     public abstract void save(T object, boolean async, Runnable callback);
 
+    public abstract void shutdown();
+
     public void save(T object, boolean async) {
         save(object, async, null);
     }
@@ -82,7 +84,7 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
     public abstract Stream<T> stream();
 
     public boolean accepts(Class clazz) {
-        return variants.values().stream().anyMatch(c -> clazz.isAssignableFrom(c));
+        return variants.values().stream().anyMatch(clazz::isAssignableFrom);
     }
 
     public void onLoad(Consumer<Storage<T>> onLoad) {
@@ -112,8 +114,9 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
         modelCachedData.clear();
 
         JsonObject jsonObject = data.getJsonElement().getAsJsonObject();
-        for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet())
+        for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
             modelCachedData.add(entry.getKey(), entry.getValue().toString());
+        }
     }
 
     protected ModelLock<T> getLock(T object) {

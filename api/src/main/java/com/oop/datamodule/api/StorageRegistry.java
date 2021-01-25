@@ -41,4 +41,10 @@ public class StorageRegistry implements Loadable, Saveable {
     public void load(boolean async, Runnable callback) {
         storages.forEach(storage -> storage.load(async, callback));
     }
+
+    public void shutdown() {
+        for (Storage<? extends ModelBody> storage : storages) {
+            storage.shutdown();
+        }
+    }
 }
