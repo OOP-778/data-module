@@ -30,7 +30,7 @@ public class StorageExporter {
     }
 
     @SneakyThrows
-    public void export(File directory, String name) {
+    public long export(File directory, String name) {
         File exportFile = new File(directory, name + ".datapack");
 
         if (!directory.exists())
@@ -73,10 +73,9 @@ public class StorageExporter {
                 byte[] done = writer.done();
 
                 size.addAndGet(done.length);
+                output.write(done);
 
                 exported.addAndGet(objects.size());
-
-                output.write(done);
             } catch (Throwable throwable) {
                 throwable.printStackTrace();
             }
@@ -84,5 +83,7 @@ public class StorageExporter {
 
         output.flush();
         output.close();
+
+        return exported.get();
     }
 }
