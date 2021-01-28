@@ -30,6 +30,11 @@ public class PostgreDatabase extends SQLDatabase {
     }
 
     @Override
+    public String columnEscaper() {
+        return "\"";
+    }
+
+    @Override
     public void dropColumn(String table, String... dropsColumns) {
         List<String> columns = getColumns(table);
         for (String dropsColumn : dropsColumns) {
@@ -43,7 +48,7 @@ public class PostgreDatabase extends SQLDatabase {
         List<String> columns = getColumns(table);
         for (DataPair<String, String> renamedColumn : pairs) {
             if (!columns.contains(renamedColumn.getKey())) continue;
-            execute("ALTER TABLE " + table + " CHANGE " + renamedColumn.getKey() + " " + renamedColumn.getValue() + " TEXT");
+            execute("ALTER TABLE " + table + " CHANGE " + renamedColumn.getKey() + " \"" + renamedColumn.getValue() + "\" TEXT");
         }
     }
 }

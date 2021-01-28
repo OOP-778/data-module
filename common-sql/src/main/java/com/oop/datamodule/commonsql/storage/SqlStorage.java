@@ -254,7 +254,11 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
     @SneakyThrows
     private PreparedStatement createInsertStatement(String tableName, String[] structure) {
         StringBuilder builder = new StringBuilder();
-        builder.append("INSERT INTO ").append(tableName).append(" (").append(Arrays.stream(structure).map(SqlUtil::escapeColumn).collect(Collectors.joining(","))).append(") VALUES (");
+        builder.append("INSERT INTO ").append(tableName).append(" (").append(Arrays
+                .stream(structure)
+                .map(column -> escapeColumn(column, database))
+                .collect(Collectors.joining(","))
+        ).append(") VALUES (");
         builder.append(Arrays.stream(structure).map(s -> "?").collect(Collectors.joining(",")));
         builder.append(")");
         return database.getConnection().prepareStatement(builder.toString());
@@ -304,7 +308,7 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
                 builder.append(", ");
 
             } else first = false;
-            builder.append(escapeColumn(column)).append(" = ?");
+            builder.append(escapeColumn(column, database)).append(" = ?");
         }
 
         builder.append(" WHERE ").append(pkColumn).append(" = ?");

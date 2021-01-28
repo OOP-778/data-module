@@ -55,7 +55,7 @@ public class TableCreator {
 
             } else
                 queryBuilder
-                        .append(escapeColumn(primaryKey.getKey()))
+                        .append(escapeColumn(primaryKey.getKey(), database))
                         .append(" VARCHAR(255)")
                         .append(", ");
         }
@@ -64,7 +64,7 @@ public class TableCreator {
         for (DataPair<String, String> columnPair : columns) {
             if (first) {
                 queryBuilder
-                        .append(escapeColumn(columnPair.getKey()))
+                        .append(escapeColumn(columnPair.getKey(), database))
                         .append(" ")
                         .append(columnPair.getValue());
                 first = false;
@@ -72,7 +72,7 @@ public class TableCreator {
             } else
                 queryBuilder
                         .append(", ")
-                        .append(escapeColumn(columnPair.getKey()))
+                        .append(escapeColumn(columnPair.getKey(), database))
                         .append(" ")
                         .append(columnPair.getValue());
         }

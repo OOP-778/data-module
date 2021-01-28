@@ -184,4 +184,9 @@ public class SQLiteDatabase extends SQLDatabase {
     public String getType() {
         return "SQLITE";
     }
+
+    @Override
+    public String columnEscaper() {
+        return "";
+    }
 }

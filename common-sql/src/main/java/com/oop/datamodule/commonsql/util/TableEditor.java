@@ -36,7 +36,7 @@ public class TableEditor {
         for (DataPair<String, String> column : addColumns) {
             List<String> columns = database.getColumns(table);
             if (!columns.contains(column.getKey()))
-                database.execute("ALTER TABLE " + table + " ADD " + column.getKey() + " " + column.getValue());
+                database.execute("ALTER TABLE " + table + " ADD " + SqlUtil.escapeColumn(column.getKey(), database) + " " + column.getValue());
         }
 
         // Rename columns

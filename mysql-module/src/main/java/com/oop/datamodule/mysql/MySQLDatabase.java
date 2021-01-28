@@ -8,7 +8,6 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
 public class MySQLDatabase extends SQLDatabase {
     private final MySQLCredential credential;
 
@@ -62,5 +61,10 @@ public class MySQLDatabase extends SQLDatabase {
     @Override
     public String getType() {
         return "MYSQL";
+    }
+
+    @Override
+    public String columnEscaper() {
+        return "";
     }
 }

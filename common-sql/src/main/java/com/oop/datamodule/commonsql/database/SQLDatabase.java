@@ -16,12 +16,13 @@ import static com.oop.datamodule.commonsql.util.SqlUtil.escapeColumn;
 
 @Getter
 public abstract class SQLDatabase {
-
     private Map<String, Connection> threadConnections = new ConcurrentHashMap<>();
 
     protected abstract Connection provideConnection() throws Throwable;
 
     public abstract String getType();
+
+    public abstract String columnEscaper();
 
     public synchronized Connection getConnection() {
         Connection connection = threadConnections.get(Thread.currentThread().getName());
@@ -84,7 +85,7 @@ public abstract class SQLDatabase {
         if (!primaryKey.endsWith("\"") && !primaryKey.startsWith("\""))
             primaryKey = "\"" + primaryKey + "\"";
 
-        try (PreparedStatement preparedStatement = getConnection().prepareStatement("SELECT " + escapeColumn(structure[0]) + " from " + table + " where " + escapeColumn(structure[0]) + " = '" + primaryKey + "'")) {
+        try (PreparedStatement preparedStatement = getConnection().prepareStatement("SELECT " + escapeColumn(structure[0], this) + " from " + table + " where " + escapeColumn(structure[0], this) + " = '" + primaryKey + "'")) {
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
                 return resultSet.next() && resultSet.getObject(1) != null;
             }
@@ -115,7 +116,7 @@ public abstract class SQLDatabase {
         if (!primaryKey.startsWith("\""))
             primaryKey = "\"" + primaryKey + "\"";
 
-        getConnection().createStatement().execute("DELETE FROM " + table + " WHERE " + escapeColumn(structure[0]) + " = '" + primaryKey + "'");
+        getConnection().createStatement().execute("DELETE FROM " + table + " WHERE " + escapeColumn(structure[0], this) + " = '" + primaryKey + "'");
     }
 
     public abstract void renameColumn(String table, DataPair<String, String>... pairs);
