@@ -77,57 +77,56 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
         runner.accept(() -> {
             JobsRunner acquire = JobsRunner.acquire();
 
-            synchronized (database.getConnection()) {
-                try {
-                    database.getConnection().setAutoCommit(false);
-                } catch (SQLException throwables) {
-                    throwables.printStackTrace();
-                }
-
-                for (T object : this) {
-                    acquire.addJob(new SqlJob(() -> {
-                        ModelLock<T> lock = getLock(object);
-                        if (lock.isLocked()) return;
-
-                        lock.lockAndUse(() -> {
-                            try {
-                                if (!preparedTables.contains(findVariantNameFor(object.getClass())))
-                                    prepareTable(object);
-
-                                SerializedData data = new SerializedData();
-                                object.serialize(data);
-
-                                JsonObject jsonObject = data.getJsonElement().getAsJsonObject();
-                                JsonElement[] jsonElements = new JsonElement[object.getStructure().length];
-                                for (int i = 0; i < object.getStructure().length; i++) {
-                                    JsonElement element = jsonObject.get(object.getStructure()[i]);
-                                    jsonElements[i] = Objects.requireNonNull(element, "Failed to find '" + object.getStructure()[i] + "' field inside serialized data of " + object.getClass().getName());
-                                }
-
-                                String primaryKey = object.getKey();
-                                if (database.isPrimaryKeyUsed(findVariantNameFor(object.getClass()), object.getStructure(), primaryKey))
-                                    updateObject(object, primaryKey, jsonObject);
-
-                                else
-                                    insertObject(object, primaryKey, jsonObject);
-                            } catch (Throwable throwable) {
-                                throwable.printStackTrace();
-                            }
-                        });
-                    }));
-                }
-
-                JobsResult jobsResult = acquire.startAndWait();
-                try {
-                    database.getConnection().commit();
-                    database.getConnection().setAutoCommit(true);
-                } catch (SQLException throwables) {
-                    throwables.printStackTrace();
-                }
-
-                if (callback != null)
-                    callback.run();
+            Connection connection = database.getConnection();
+            try {
+                connection.setAutoCommit(false);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
             }
+
+            for (T object : this) {
+                acquire.addJob(new SqlJob(() -> {
+                    ModelLock<T> lock = getLock(object);
+                    if (lock.isLocked()) return;
+
+                    lock.lockAndUse(() -> {
+                        try {
+                            if (!preparedTables.contains(findVariantNameFor(object.getClass())))
+                                prepareTable(object);
+
+                            SerializedData data = new SerializedData();
+                            object.serialize(data);
+
+                            JsonObject jsonObject = data.getJsonElement().getAsJsonObject();
+                            JsonElement[] jsonElements = new JsonElement[object.getStructure().length];
+                            for (int i = 0; i < object.getStructure().length; i++) {
+                                JsonElement element = jsonObject.get(object.getStructure()[i]);
+                                jsonElements[i] = Objects.requireNonNull(element, "Failed to find '" + object.getStructure()[i] + "' field inside serialized data of " + object.getClass().getName());
+                            }
+
+                            String primaryKey = object.getKey();
+                            if (database.isPrimaryKeyUsed(findVariantNameFor(object.getClass()), object.getStructure(), primaryKey))
+                                updateObject(object, primaryKey, jsonObject);
+
+                            else
+                                insertObject(object, primaryKey, jsonObject);
+                        } catch (Throwable throwable) {
+                            throwable.printStackTrace();
+                        }
+                    });
+                }));
+            }
+
+            JobsResult jobsResult = acquire.startAndWait();
+            try {
+                database.getConnection().commit();
+                database.getConnection().setAutoCommit(true);
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
+
+            if (callback != null)
+                callback.run();
         });
     }
 
