@@ -4,50 +4,53 @@ import com.oop.datamodule.api.SerializedData;
 import com.oop.datamodule.api.StorageInitializer;
 import com.oop.datamodule.api.model.ModelBody;
 import com.oop.datamodule.api.storage.lock.ModelLock;
-import lombok.Getter;
-import lombok.NonNull;
-
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import lombok.Getter;
+import lombok.NonNull;
 
 public class JsonModelLock<T extends ModelBody> extends ModelLock<T> {
 
-    @Getter
-    private final File file;
-    private final JsonStorage<T> storage;
+  @Getter private final File file;
+  private final JsonStorage<T> storage;
 
-    public JsonModelLock(@NonNull T object, File file, JsonStorage<T> storage) {
-        super(object);
-        this.file = file;
-        this.storage = storage;
-    }
+  public JsonModelLock(@NonNull T object, File file, JsonStorage<T> storage) {
+    super(object);
+    this.file = file;
+    this.storage = storage;
+  }
 
-    public void save() {
-        if (isLocked()) return;
+  public void save() {
+    if (isLocked()) return;
 
-        lockAndUse(() -> {
-            try {
-                if (!file.exists())
-                    file.createNewFile();
+    lockAndUse(
+        () -> {
+          try {
+            if (!file.exists()) file.createNewFile();
 
-                SerializedData data = new SerializedData();
-                object.serialize(data);
+            SerializedData data = new SerializedData();
+            object.serialize(data);
 
-                if (!storage.isObjectUpdated(object.getKey(), data)) return;
+            if (!storage.isObjectUpdated(object.getKey(), data)) return;
 
-                data.write(storage.getTypeVar(), storage.findVariantNameFor(object.getClass()));
+            data.write(storage.getTypeVar(), storage.findVariantNameFor(object.getClass()));
 
-                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
-                JsonStorage.getPrettifiedGson().toJson(data.getJsonElement(), writer);
-                writer.close();
+            BufferedWriter writer =
+                new BufferedWriter(
+                    new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8));
+            JsonStorage.getPrettifiedGson().toJson(data.getJsonElement(), writer);
+            writer.close();
 
-            } catch (Throwable throwable) {
-                StorageInitializer.getInstance().getErrorHandler().accept(new IllegalStateException("Failed to save object with id: " + object.getKey(), throwable));
-            }
+          } catch (Throwable throwable) {
+            StorageInitializer.getInstance()
+                .getErrorHandler()
+                .accept(
+                    new IllegalStateException(
+                        "Failed to save object with id: " + object.getKey(), throwable));
+          }
         });
-    }
-
+  }
 }

@@ -11,7 +11,6 @@ import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.api.util.job.Job;
 import com.oop.datamodule.api.util.job.JobsResult;
 import com.oop.datamodule.api.util.job.JobsRunner;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,158 +24,172 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public abstract class JsonStorage<T extends ModelBody> extends Storage<T> {
-    private static final Gson prettifiedGson;
+  private static final Gson prettifiedGson;
 
-    static {
-        prettifiedGson = StorageInitializer.getInstance().getPrettyfiedGson();
-    }
+  static {
+    prettifiedGson = StorageInitializer.getInstance().getPrettyfiedGson();
+  }
 
-    private final File directory;
+  private final File directory;
 
-    public JsonStorage(
-            StorageRegistry storageRegistry,
-            File directory,
-            boolean register
-    ) {
-        super(storageRegistry, register);
-        this.directory = directory;
+  public JsonStorage(StorageRegistry storageRegistry, File directory, boolean register) {
+    super(storageRegistry, register);
+    this.directory = directory;
 
-        if (!directory.exists())
-            directory.mkdirs();
-    }
+    if (!directory.exists()) directory.mkdirs();
+  }
 
-    @Override
-    public void shutdown() {
+  public JsonStorage(StorageRegistry storageRegistry, File directory) {
+    this(storageRegistry, directory, true);
+  }
 
-    }
+  public JsonStorage(File directory) {
+    this(null, directory, true);
+  }
 
-    public JsonStorage(StorageRegistry storageRegistry, File directory) {
-        this(storageRegistry, directory, true);
-    }
+  public static Gson getPrettifiedGson() {
+    return prettifiedGson;
+  }
 
-    public JsonStorage(File directory) {
-        this(null, directory, true);
-    }
+  @Override
+  public void shutdown() {}
 
-    @Override
-    public void save(T object, boolean async, Runnable callback) {
-        // Make sure we have an variant for this class
-        findVariantNameFor(object.getClass());
+  @Override
+  public void save(T object, boolean async, Runnable callback) {
+    // Make sure we have an variant for this class
+    findVariantNameFor(object.getClass());
 
-        JsonModelLock<T> lock = getLock(object);
-        if (lock.isLocked()) return;
+    JsonModelLock<T> lock = getLock(object);
+    if (lock.isLocked()) return;
 
-        Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
-        runner.accept(() -> {
-            lock.save();
-            if (callback != null)
-                callback.run();
+    Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
+    runner.accept(
+        () -> {
+          lock.save();
+          if (callback != null) callback.run();
         });
-    }
+  }
 
-    @Override
-    public void remove(T object) {
-        super.remove(object);
+  @Override
+  public void remove(T object) {
+    super.remove(object);
 
-        acquireAndLaterRemove(object, () -> {
-            getLock(object).lockAndUseSelf(lock -> {
-                File file = ((JsonModelLock) lock).getFile();
-                file.delete();
-            });
+    acquireAndLaterRemove(
+        object,
+        () -> {
+          getLock(object)
+              .lockAndUseSelf(
+                  lock -> {
+                    File file = ((JsonModelLock) lock).getFile();
+                    file.delete();
+                  });
         });
-    }
+  }
 
-    @Override
-    public void load(boolean async, Runnable callback) {
-        Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
-        runner.accept(() -> {
-            Set<DataPair<T, File>> loadedData = ConcurrentHashMap.newKeySet();
+  @Override
+  public void load(boolean async, Runnable callback) {
+    Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
+    runner.accept(
+        () -> {
+          Set<DataPair<T, File>> loadedData = ConcurrentHashMap.newKeySet();
 
-            JobsRunner acquire = JobsRunner.acquire();
-            for (String s : getVariants().keySet()) {
-                File variantDirectory = new File(directory + "/" + s);
-                if (!variantDirectory.exists())
-                    variantDirectory.mkdirs();
+          JobsRunner acquire = JobsRunner.acquire();
+          for (String s : getVariants().keySet()) {
+            File variantDirectory = new File(directory + "/" + s);
+            if (!variantDirectory.exists()) variantDirectory.mkdirs();
 
-                for (File file : Objects.requireNonNull(variantDirectory.listFiles())) {
-                    acquire.addJob(new Job() {
-                        @Override
-                        public String getName() {
-                            return file.getName();
-                        }
+            for (File file : Objects.requireNonNull(variantDirectory.listFiles())) {
+              acquire.addJob(
+                  new Job() {
+                    @Override
+                    public String getName() {
+                      return file.getName();
+                    }
 
-                        @Override
-                        public void run() {
-                            try {
-                                BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8));
-                                JsonObject jsonObject = prettifiedGson.fromJson(reader, JsonObject.class);
-                                reader.close();
-                                if (jsonObject == null) return;
+                    @Override
+                    public void run() {
+                      try {
+                        BufferedReader reader =
+                            new BufferedReader(
+                                new InputStreamReader(
+                                    new FileInputStream(file), StandardCharsets.UTF_8));
+                        JsonObject jsonObject = prettifiedGson.fromJson(reader, JsonObject.class);
+                        reader.close();
+                        if (jsonObject == null) return;
 
-                                SerializedData data = new SerializedData(jsonObject);
-                                Optional<SerializedData> type = data.getChildren(getTypeVar());
-                                if (!type.isPresent())
-                                    throw new IllegalAccessException("Failed to find type in serialized data. Data is outdated!");
+                        SerializedData data = new SerializedData(jsonObject);
+                        Optional<SerializedData> type = data.getChildren(getTypeVar());
+                        if (!type.isPresent())
+                          throw new IllegalAccessException(
+                              "Failed to find type in serialized data. Data is outdated!");
 
-                                Class<? extends T> clazz = getVariants().get(type.get().applyAs());
-                                Constructor<? extends T> constructor = getConstructor(Objects.requireNonNull(clazz, "Failed to find clazz for serialized type: " + type.get().applyAs()));
+                        Class<? extends T> clazz = getVariants().get(type.get().applyAs());
+                        Constructor<? extends T> constructor =
+                            getConstructor(
+                                Objects.requireNonNull(
+                                    clazz,
+                                    "Failed to find clazz for serialized type: "
+                                        + type.get().applyAs()));
 
-                                T object = constructor.newInstance();
-                                object.deserialize(data);
+                        T object = constructor.newInstance();
+                        object.deserialize(data);
 
-                                loadedData.add(new DataPair<>(object, file));
-                                loadObjectCache(object.getKey(), data);
-                            } catch (Throwable throwable) {
-                                throw new IllegalStateException("Failed to load object at file: " + file.getParentFile().getName() + "/" + file.getName(), throwable);
-                            }
-                        }
-                    });
-                }
+                        loadedData.add(new DataPair<>(object, file));
+                        loadObjectCache(object.getKey(), data);
+                      } catch (Throwable throwable) {
+                        throw new IllegalStateException(
+                            "Failed to load object at file: "
+                                + file.getParentFile().getName()
+                                + "/"
+                                + file.getName(),
+                            throwable);
+                      }
+                    }
+                  });
             }
+          }
 
-            JobsResult jobsResult = acquire.startAndWait();
-            for (Throwable error : jobsResult.getErrors())
-                StorageInitializer.getInstance().getErrorHandler().accept(error);
+          JobsResult jobsResult = acquire.startAndWait();
+          for (Throwable error : jobsResult.getErrors())
+            StorageInitializer.getInstance().getErrorHandler().accept(error);
 
-            for (DataPair<T, File> pair : loadedData)
-                onAdd(pair.getKey());
+          for (DataPair<T, File> pair : loadedData) onAdd(pair.getKey());
 
-            // On load
-            getOnLoad().forEach(c -> c.accept(this));
+          // On load
+          getOnLoad().forEach(c -> c.accept(this));
 
-            if (callback != null)
-                callback.run();
+          if (callback != null) callback.run();
         });
-    }
+  }
 
-    @Override
-    public void save(boolean async, Runnable callback) {
-        Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
-        runner.accept(() -> {
-            for (T object : this)
-                getLock(object).save();
+  @Override
+  public void save(boolean async, Runnable callback) {
+    Consumer<Runnable> runner = StorageInitializer.getInstance().getRunner(async);
+    runner.accept(
+        () -> {
+          for (T object : this) getLock(object).save();
 
-            if (callback != null)
-                callback.run();
+          if (callback != null) callback.run();
         });
-    }
+  }
 
-    public String getTypeVar() {
-        return "%%TYPE%%";
-    }
+  public String getTypeVar() {
+    return "%%TYPE%%";
+  }
 
-    @Override
-    protected JsonModelLock<T> getLock(T object) {
-        return (JsonModelLock<T>) getLockMap().computeIfAbsent(object.getKey(), k -> {
-            File variantDirectory = new File(directory + "/" + findVariantNameFor(object.getClass()));
-            if (!variantDirectory.exists())
-                variantDirectory.mkdirs();
+  @Override
+  protected JsonModelLock<T> getLock(T object) {
+    return (JsonModelLock<T>)
+        getLockMap()
+            .computeIfAbsent(
+                object.getKey(),
+                k -> {
+                  File variantDirectory =
+                      new File(directory + "/" + findVariantNameFor(object.getClass()));
+                  if (!variantDirectory.exists()) variantDirectory.mkdirs();
 
-            return new JsonModelLock<>(object, new File(variantDirectory, object.getKey() + ".json"), this);
-        });
-    }
-
-    public static Gson getPrettifiedGson() {
-        return prettifiedGson;
-    }
+                  return new JsonModelLock<>(
+                      object, new File(variantDirectory, object.getKey() + ".json"), this);
+                });
+  }
 }

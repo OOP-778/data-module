@@ -8,4 +8,6 @@ dependencies {
     }
     implementation(project(":common-sql"))
     implementation(project(":api"))
+
+    compileOnly("com.zaxxer:HikariCP:4.0.1")
 }

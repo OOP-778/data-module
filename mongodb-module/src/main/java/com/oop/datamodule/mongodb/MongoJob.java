@@ -6,16 +6,15 @@ import lombok.NonNull;
 
 @AllArgsConstructor
 public class MongoJob extends Job {
-    private @NonNull
-    final Runnable runnable;
+  private @NonNull final Runnable runnable;
 
-    @Override
-    public String getName() {
-        return "mongo-job";
-    }
+  @Override
+  public String getName() {
+    return "mongo-job";
+  }
 
-    @Override
-    public void run() {
-        runnable.run();
-    }
+  @Override
+  public void run() {
+    runnable.run();
+  }
 }

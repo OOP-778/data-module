@@ -4,18 +4,19 @@ import com.oop.datamodule.api.util.job.Job;
 
 public class SqlJob extends Job {
 
-    private final Runnable runnable;
-    protected SqlJob(Runnable runnable) {
-        this.runnable = runnable;
-    }
+  private final Runnable runnable;
 
-    @Override
-    public String getName() {
-        return "sql-job";
-    }
+  protected SqlJob(Runnable runnable) {
+    this.runnable = runnable;
+  }
 
-    @Override
-    public void run() {
-        runnable.run();
-    }
+  @Override
+  public String getName() {
+    return "sql-job";
+  }
+
+  @Override
+  public void run() {
+    runnable.run();
+  }
 }

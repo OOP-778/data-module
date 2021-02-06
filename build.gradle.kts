@@ -133,14 +133,14 @@ fun configureProject(name: String, apply: (ProjectConfig).() -> Unit) {
 }
 
 data class ProjectConfig(
-        val name: String,
-        var outName: String = name,
-        var publish: Boolean = true,
-        var group: String = "com.oop.datamodule",
-        var artifact: String = name,
-        var version: Any
+    val name: String,
+    var outName: String = name,
+    var publish: Boolean = true,
+    var group: String = "com.oop.datamodule",
+    var artifact: String = name,
+    var version: Any
 ) {
     constructor(project: String, version: Any) : this(
-            name = project, version = version
+        name = project, version = version
     )
 }
