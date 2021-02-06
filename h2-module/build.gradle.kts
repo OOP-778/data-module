@@ -1,7 +1,5 @@
-version = "unspecified"
-
 dependencies {
-    compileOnly("org.xerial:sqlite-jdbc:3.32.3.2")
+    compileOnly("com.h2database:h2:1.4.200")
     implementation(project(":common-sql"))
     implementation(project(":api"))
 }

@@ -1,6 +1,7 @@
 package com.oop.datamodule.testing;
 
 import com.oop.datamodule.api.SerializedData;
+import com.oop.datamodule.api.StorageInitializer;
 import com.oop.datamodule.universal.model.UniversalBodyModel;
 import java.util.ArrayList;
 import java.util.List;
@@ -38,6 +39,7 @@ public class Object implements UniversalBodyModel {
 
   @Override
   public void deserialize(SerializedData data) {
+    System.out.println(StorageInitializer.getInstance().getPrettyfiedGson().toJson(data.getJsonElement()));
     this.uuid = data.applyAs("uuid", UUID.class);
     this.coins = data.applyAs("coins", int.class);
     this.object = data.applyAs("sub", SubObject.class, SubObject::new);

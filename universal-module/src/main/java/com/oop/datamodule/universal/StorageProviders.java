@@ -3,6 +3,7 @@ package com.oop.datamodule.universal;
 import com.oop.datamodule.universal.provider.JsonProvider;
 import com.oop.datamodule.universal.provider.MongoDBProvider;
 import com.oop.datamodule.universal.provider.StorageProvider;
+import com.oop.datamodule.universal.provider.sql.H2Provider;
 import com.oop.datamodule.universal.provider.sql.MySQLProvider;
 import com.oop.datamodule.universal.provider.sql.PostgreSQLProvider;
 import com.oop.datamodule.universal.provider.sql.SQLiteProvider;
@@ -17,6 +18,7 @@ public class StorageProviders {
   public static final MySQLProvider MYSQL = new MySQLProvider();
   public static final JsonProvider JSON = new JsonProvider();
   public static final PostgreSQLProvider POSTGRE = new PostgreSQLProvider();
+  public static final H2Provider H2 = new H2Provider();
 
   private static final Map<String, StorageProvider> byName = new HashMap<>();
 
