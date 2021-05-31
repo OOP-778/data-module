@@ -1,13 +1,14 @@
 package com.oop.datamodule.api.loader;
 
-import static java.util.Objects.requireNonNull;
-
 import com.oop.datamodule.api.loader.relocation.Relocation;
+import lombok.EqualsAndHashCode;
+
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
-import lombok.EqualsAndHashCode;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * An immutable representation of a Maven artifact that can be downloaded, relocated and then loaded

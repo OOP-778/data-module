@@ -2,11 +2,12 @@ package com.oop.datamodule.universal;
 
 import com.oop.datamodule.api.storage.Storage;
 import com.oop.datamodule.universal.model.UniversalBodyModel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 /** Allows linking of storage providers implementations to access onAdd and onRemove and more */
 @AllArgsConstructor

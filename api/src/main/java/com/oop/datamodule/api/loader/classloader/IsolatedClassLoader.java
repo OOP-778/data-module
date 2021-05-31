@@ -1,11 +1,11 @@
 package com.oop.datamodule.api.loader.classloader;
 
-import static java.util.Objects.requireNonNull;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * This class loader is a simple child of {@code URLClassLoader} that uses the JVM's Extensions

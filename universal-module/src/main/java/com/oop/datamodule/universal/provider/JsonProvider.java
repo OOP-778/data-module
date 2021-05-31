@@ -4,13 +4,14 @@ import com.oop.datamodule.api.storage.Storage;
 import com.oop.datamodule.json.storage.JsonStorage;
 import com.oop.datamodule.universal.Linker;
 import com.oop.datamodule.universal.model.UniversalBodyModel;
+import lombok.NonNull;
+
 import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import lombok.NonNull;
 
 public class JsonProvider implements StorageProvider<File> {
   @Override

@@ -1,33 +1,21 @@
 package com.oop.datamodule.api.loader;
 
-import static java.util.Objects.requireNonNull;
-
 import com.oop.datamodule.api.loader.logging.LogLevel;
 import com.oop.datamodule.api.loader.logging.Logger;
 import com.oop.datamodule.api.loader.logging.adapters.LogAdapter;
 import com.oop.datamodule.api.loader.relocation.Relocation;
 import com.oop.datamodule.api.loader.relocation.RelocationHelper;
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.net.MalformedURLException;
-import java.net.SocketTimeoutException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.net.UnknownHostException;
+
+import java.io.*;
+import java.net.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Base64;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A runtime dependency manager for plugins.

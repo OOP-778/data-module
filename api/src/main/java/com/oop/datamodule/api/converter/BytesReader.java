@@ -1,12 +1,13 @@
 package com.oop.datamodule.api.converter;
 
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.SneakyThrows;
+
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
 import java.util.List;
 import java.util.function.Supplier;
-import lombok.Getter;
-import lombok.NonNull;
-import lombok.SneakyThrows;
 
 @Getter
 public class BytesReader {

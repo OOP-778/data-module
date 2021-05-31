@@ -5,12 +5,13 @@ import com.oop.datamodule.commonsql.database.SQLDatabase;
 import com.oop.datamodule.commonsql.storage.SqlStorage;
 import com.oop.datamodule.universal.Linker;
 import com.oop.datamodule.universal.model.UniversalBodyModel;
+import lombok.NonNull;
+
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import lombok.NonNull;
 
 public class SQLStorageImpl<T extends UniversalBodyModel> extends SqlStorage<T> {
   private final Linker<T> linker;

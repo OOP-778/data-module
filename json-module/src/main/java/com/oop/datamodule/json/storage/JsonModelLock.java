@@ -4,13 +4,14 @@ import com.oop.datamodule.api.SerializedData;
 import com.oop.datamodule.api.StorageInitializer;
 import com.oop.datamodule.api.model.ModelBody;
 import com.oop.datamodule.api.storage.lock.ModelLock;
+import lombok.Getter;
+import lombok.NonNull;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import lombok.Getter;
-import lombok.NonNull;
 
 public class JsonModelLock<T extends ModelBody> extends ModelLock<T> {
 

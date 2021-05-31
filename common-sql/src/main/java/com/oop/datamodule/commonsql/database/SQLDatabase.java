@@ -1,20 +1,16 @@
 package com.oop.datamodule.commonsql.database;
 
-import static com.oop.datamodule.commonsql.util.SqlUtil.escapeColumn;
-
 import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.commonsql.util.TableCreator;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
-import java.sql.SQLException;
-import java.sql.Statement;
+import lombok.Getter;
+import lombok.SneakyThrows;
+
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import lombok.Getter;
-import lombok.SneakyThrows;
+
+import static com.oop.datamodule.commonsql.util.SqlUtil.escapeColumn;
 
 @Getter
 public abstract class SQLDatabase {
@@ -152,10 +148,11 @@ public abstract class SQLDatabase {
   public synchronized void remove(String table, String[] structure, String primaryKey) {
     if (!primaryKey.startsWith("\"")) primaryKey = "\"" + primaryKey + "\"";
 
-      String finalPrimaryKey = primaryKey;
-      getConnection()
-        .use(conn -> {
-            try {
+    String finalPrimaryKey = primaryKey;
+    getConnection()
+        .use(
+            conn -> {
+              try {
                 conn.createStatement()
                     .execute(
                         "DELETE FROM "
@@ -165,10 +162,10 @@ public abstract class SQLDatabase {
                             + " = '"
                             + finalPrimaryKey
                             + "'");
-            } catch (SQLException throwables) {
+              } catch (SQLException throwables) {
                 throwables.printStackTrace();
-            }
-        })
+              }
+            })
         .evict();
   }
 

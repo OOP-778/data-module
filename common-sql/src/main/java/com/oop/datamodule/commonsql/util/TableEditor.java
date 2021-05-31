@@ -2,9 +2,10 @@ package com.oop.datamodule.commonsql.util;
 
 import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.commonsql.database.SQLDatabase;
+import lombok.RequiredArgsConstructor;
+
 import java.util.ArrayList;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class TableEditor {

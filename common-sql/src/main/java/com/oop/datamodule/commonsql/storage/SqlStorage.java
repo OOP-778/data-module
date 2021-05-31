@@ -1,7 +1,5 @@
 package com.oop.datamodule.commonsql.storage;
 
-import static com.oop.datamodule.commonsql.util.SqlUtil.escapeColumn;
-
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.oop.datamodule.api.SerializedData;
@@ -19,21 +17,19 @@ import com.oop.datamodule.commonsql.model.SqlModelBody;
 import com.oop.datamodule.commonsql.util.Column;
 import com.oop.datamodule.commonsql.util.TableCreator;
 import com.oop.datamodule.commonsql.util.TableEditor;
+import lombok.Getter;
+import lombok.SneakyThrows;
+
 import java.lang.reflect.Constructor;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import lombok.Getter;
-import lombok.SneakyThrows;
+
+import static com.oop.datamodule.commonsql.util.SqlUtil.escapeColumn;
 
 public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
   private final Set<String> preparedTables = ConcurrentHashMap.newKeySet();
@@ -82,54 +78,60 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
         () -> {
           JobsRunner acquire = JobsRunner.acquire();
 
-          database.getConnection()
-              .useNonLock(conn -> {
-                  for (T object : this) {
+          database
+              .getConnection()
+              .useNonLock(
+                  conn -> {
+                    for (T object : this) {
                       acquire.addJob(
                           new SqlJob(
                               () -> {
-                                  ModelLock<T> lock = getLock(object);
-                                  if (lock.isLocked()) return;
+                                ModelLock<T> lock = getLock(object);
+                                if (lock.isLocked()) return;
 
-                                  lock.lockAndUse(
-                                      () -> {
-                                          try {
-                                              if (!preparedTables.contains(findVariantNameFor(object.getClass())))
-                                                  prepareTable(object);
+                                lock.lockAndUse(
+                                    () -> {
+                                      try {
+                                        if (!preparedTables.contains(
+                                            findVariantNameFor(object.getClass())))
+                                          prepareTable(object);
 
-                                              SerializedData data = new SerializedData();
-                                              object.serialize(data);
+                                        SerializedData data = new SerializedData();
+                                        object.serialize(data);
 
-                                              JsonObject jsonObject = data.getJsonElement().getAsJsonObject();
-                                              JsonElement[] jsonElements =
-                                                  new JsonElement[object.getStructure().length];
-                                              for (int i = 0; i < object.getStructure().length; i++) {
-                                                  JsonElement element = jsonObject.get(object.getStructure()[i]);
-                                                  jsonElements[i] =
-                                                      Objects.requireNonNull(
-                                                          element,
-                                                          "Failed to find '"
-                                                              + object.getStructure()[i]
-                                                              + "' field inside serialized data of "
-                                                              + object.getClass().getName());
-                                              }
+                                        JsonObject jsonObject =
+                                            data.getJsonElement().getAsJsonObject();
+                                        JsonElement[] jsonElements =
+                                            new JsonElement[object.getStructure().length];
+                                        for (int i = 0; i < object.getStructure().length; i++) {
+                                          JsonElement element =
+                                              jsonObject.get(object.getStructure()[i]);
+                                          jsonElements[i] =
+                                              Objects.requireNonNull(
+                                                  element,
+                                                  "Failed to find '"
+                                                      + object.getStructure()[i]
+                                                      + "' field inside serialized data of "
+                                                      + object.getClass().getName());
+                                        }
 
-                                              String primaryKey = object.getKey();
-                                              if (database.isPrimaryKeyUsed(
-                                                  findVariantNameFor(object.getClass()),
-                                                  object.getStructure(),
-                                                  primaryKey)) updateObject(object, primaryKey, jsonObject);
-                                              else insertObject(object, primaryKey, jsonObject);
-                                          } catch (Throwable throwable) {
-                                              throwable.printStackTrace();
-                                          }
-                                      });
+                                        String primaryKey = object.getKey();
+                                        if (database.isPrimaryKeyUsed(
+                                            findVariantNameFor(object.getClass()),
+                                            object.getStructure(),
+                                            primaryKey))
+                                          updateObject(object, primaryKey, jsonObject);
+                                        else insertObject(object, primaryKey, jsonObject);
+                                      } catch (Throwable throwable) {
+                                        throwable.printStackTrace();
+                                      }
+                                    });
                               }));
-                  }
+                    }
 
-                  JobsResult jobsResult = acquire.startAndWait();
-                  if (callback != null) callback.run();
-              });
+                    JobsResult jobsResult = acquire.startAndWait();
+                    if (callback != null) callback.run();
+                  });
         });
   }
 
@@ -254,21 +256,24 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
 
     getDatabase()
         .getConnection()
-        .use(conn -> {
-            try (PreparedStatement stmt =
-                conn.prepareStatement(createInsertStatement(findVariantNameFor(object.getClass()), object.getStructure()))) {
+        .use(
+            conn -> {
+              try (PreparedStatement stmt =
+                  conn.prepareStatement(
+                      createInsertStatement(
+                          findVariantNameFor(object.getClass()), object.getStructure()))) {
                 for (int i = 0; i < object.getStructure().length; i++) {
-                    String column = object.getStructure()[i];
-                    String serializedData = jsonObject.get(column).toString();
-                    cache.add(column, serializedData);
+                  String column = object.getStructure()[i];
+                  String serializedData = jsonObject.get(column).toString();
+                  cache.add(column, serializedData);
 
-                    stmt.setString(i + 1, serializedData);
+                  stmt.setString(i + 1, serializedData);
                 }
                 stmt.executeUpdate();
-            } catch (SQLException e) {
+              } catch (SQLException e) {
                 e.printStackTrace();
-            }
-        })
+              }
+            })
         .evict();
   }
 
@@ -307,32 +312,36 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
 
     getDatabase()
         .getConnection()
-        .use(conn -> {
-            try (PreparedStatement stmt =
-                conn.prepareStatement(createUpdateStatement(
-                    findVariantNameFor(object.getClass()),
-                    object.getStructure()[0],
-                    needsUpdate.stream().map(DataPair::getKey).collect(Collectors.toList())))) {
+        .use(
+            conn -> {
+              try (PreparedStatement stmt =
+                  conn.prepareStatement(
+                      createUpdateStatement(
+                          findVariantNameFor(object.getClass()),
+                          object.getStructure()[0],
+                          needsUpdate.stream()
+                              .map(DataPair::getKey)
+                              .collect(Collectors.toList())))) {
                 int currentIndex = 1;
 
                 for (DataPair<String, String> dataPair : needsUpdate) {
-                    stmt.setString(currentIndex, dataPair.getValue());
-                    currentIndex++;
+                  stmt.setString(currentIndex, dataPair.getValue());
+                  currentIndex++;
                 }
 
-
-                stmt.setString(currentIndex, !primaryKey.startsWith("\"") ? "\"" + primaryKey + "\"" : primaryKey);
+                stmt.setString(
+                    currentIndex,
+                    !primaryKey.startsWith("\"") ? "\"" + primaryKey + "\"" : primaryKey);
                 stmt.executeUpdate();
-            } catch (SQLException e) {
+              } catch (SQLException e) {
                 e.printStackTrace();
-            }
-        })
+              }
+            })
         .evict();
   }
 
   @SneakyThrows
-  protected String createUpdateStatement(
-      String table, String pkColumn, List<String> columns) {
+  protected String createUpdateStatement(String table, String pkColumn, List<String> columns) {
     StringBuilder builder = new StringBuilder();
     builder.append("UPDATE ").append(table).append(" SET ");
 

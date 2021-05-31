@@ -7,6 +7,8 @@ import com.google.gson.JsonObject;
 import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.api.util.DataUtil;
 import com.oop.datamodule.api.util.Preconditions;
+import lombok.Getter;
+
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +19,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import lombok.Getter;
 
 public class SerializedData {
 

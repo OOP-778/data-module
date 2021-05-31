@@ -1,11 +1,12 @@
 package com.oop.datamodule.commonsql.util;
 
-import static com.oop.datamodule.commonsql.util.SqlUtil.escapeColumn;
-
 import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.commonsql.database.SQLDatabase;
+
 import java.util.LinkedList;
 import java.util.List;
+
+import static com.oop.datamodule.commonsql.util.SqlUtil.escapeColumn;
 
 public class TableCreator {
   private final SQLDatabase database;

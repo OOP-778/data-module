@@ -4,6 +4,7 @@ import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.commonsql.database.HikariCPDatabase;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+
 import java.util.List;
 
 public class PostgreDatabase extends HikariCPDatabase {

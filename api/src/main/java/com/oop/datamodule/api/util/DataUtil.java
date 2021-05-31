@@ -1,21 +1,14 @@
 package com.oop.datamodule.api.util;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonNull;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 import com.google.gson.internal.Primitives;
 import com.oop.datamodule.api.SerializableObject;
 import com.oop.datamodule.api.SerializedData;
 import com.oop.datamodule.api.StorageInitializer;
-import java.lang.reflect.Constructor;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 import lombok.SneakyThrows;
+
+import java.lang.reflect.Constructor;
+import java.util.*;
 
 public class DataUtil {
   private static final List<Class> primitiveList =
@@ -57,8 +50,7 @@ public class DataUtil {
       else if (endsWith == 'd') return Double.valueOf(content);
       else if (endsWith == 'f') return Float.valueOf(content);
       else if (endsWith == 'l') return Long.valueOf(content);
-      else if (endsWith == 'b')
-        return Boolean.valueOf(content.toCharArray()[0] == '0' ? "false" : "true");
+      else if (endsWith == 'b' && content.length() == 1) return content.toCharArray()[0] != '0';
 
     } catch (Throwable throwable) {
       return element.getAsString();

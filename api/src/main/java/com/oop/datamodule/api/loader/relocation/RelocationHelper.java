@@ -1,10 +1,9 @@
 package com.oop.datamodule.api.loader.relocation;
 
-import static java.util.Objects.requireNonNull;
-
 import com.oop.datamodule.api.loader.Library;
 import com.oop.datamodule.api.loader.LibraryManager;
 import com.oop.datamodule.api.loader.classloader.IsolatedClassLoader;
+
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -12,6 +11,8 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A reflection-based helper for relocating library jars. It automatically downloads and invokes

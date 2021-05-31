@@ -1,10 +1,11 @@
 package com.oop.datamodule.commonsql.database;
 
+import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
+
 import java.sql.Connection;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import lombok.NonNull;
-import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class ConnectionWrapper {
@@ -25,26 +26,26 @@ public class ConnectionWrapper {
   }
 
   public ConnectionWrapper useNonLock(ThrowableConsumer<Connection> user) {
-      try {
-          user.accept(connection);
-          return this;
-      } catch (Throwable throwable) {
-          throw new IllegalStateException("Failed to use connection", throwable);
-      } finally {
-          evict();
-      }
+    try {
+      user.accept(connection);
+      return this;
+    } catch (Throwable throwable) {
+      throw new IllegalStateException("Failed to use connection", throwable);
+    } finally {
+      evict();
+    }
   }
 
   public <T> T provideAndEvict(Function<Connection, T> provider) {
-      synchronized (connection) {
-          try {
-              return provider.apply(connection);
-          } catch (Throwable throwable) {
-              throw new IllegalStateException("Failed to use connection", throwable);
-          } finally {
-              evict();
-          }
+    synchronized (connection) {
+      try {
+        return provider.apply(connection);
+      } catch (Throwable throwable) {
+        throw new IllegalStateException("Failed to use connection", throwable);
+      } finally {
+        evict();
       }
+    }
   }
 
   public void evict() {

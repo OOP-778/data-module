@@ -2,10 +2,9 @@ package com.oop.datamodule.mysql;
 
 import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.commonsql.database.HikariCPDatabase;
-import com.oop.datamodule.commonsql.database.SQLDatabase;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import java.sql.Connection;
+
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -42,18 +41,19 @@ public class MySQLDatabase extends HikariCPDatabase {
   public List<String> getTables() {
     List<String> tables = new ArrayList<>();
     getConnection()
-        .use(conn -> {
-          try (PreparedStatement statement =
-              conn.prepareStatement(
-                  "SELECT table_name FROM information_schema.tables WHERE table_type = 'base table'")) {
-            ResultSet resultSet = statement.executeQuery();
-            while (resultSet.next()) {
-              tables.add(resultSet.getString(1));
-            }
-          } catch (Throwable throwable) {
-            throw new IllegalStateException("Failed to get tables", throwable);
-          }
-        })
+        .use(
+            conn -> {
+              try (PreparedStatement statement =
+                  conn.prepareStatement(
+                      "SELECT table_name FROM information_schema.tables WHERE table_type = 'base table'")) {
+                ResultSet resultSet = statement.executeQuery();
+                while (resultSet.next()) {
+                  tables.add(resultSet.getString(1));
+                }
+              } catch (Throwable throwable) {
+                throw new IllegalStateException("Failed to get tables", throwable);
+              }
+            })
         .evict();
     return tables;
   }

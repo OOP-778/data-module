@@ -1,13 +1,10 @@
 package com.oop.datamodule.api.util.job;
 
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 import lombok.SneakyThrows;
+
+import java.util.Set;
+import java.util.concurrent.*;
+import java.util.function.Consumer;
 
 public class JobsRunner {
   private final Object lock = true;
@@ -59,7 +56,6 @@ public class JobsRunner {
     if (jobs.isEmpty()) return new JobsResult();
 
     for (NativeJob job : jobs) executor.submit(job);
-
     return completionFuture.get(5, TimeUnit.MINUTES);
   }
 

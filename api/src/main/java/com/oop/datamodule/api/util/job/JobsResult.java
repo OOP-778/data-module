@@ -1,9 +1,10 @@
 package com.oop.datamodule.api.util.job;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import lombok.Getter;
 
 @Getter
 public class JobsResult {

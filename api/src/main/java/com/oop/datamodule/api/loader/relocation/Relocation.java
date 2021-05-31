@@ -1,10 +1,10 @@
 package com.oop.datamodule.api.loader.relocation;
 
-import static java.util.Objects.requireNonNull;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Relocations are used to describe a search and replace pattern for renaming packages in a library

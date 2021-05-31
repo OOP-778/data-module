@@ -1,12 +1,12 @@
 package com.oop.datamodule.api.loader.classloader;
 
-import static java.util.Objects.requireNonNull;
-
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
+
+import static java.util.Objects.requireNonNull;
 
 /** A reflection-based wrapper around {@link URLClassLoader} for adding URLs to the classpath. */
 public class URLClassLoaderHelper {

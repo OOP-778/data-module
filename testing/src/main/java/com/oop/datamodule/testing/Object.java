@@ -3,12 +3,13 @@ package com.oop.datamodule.testing;
 import com.oop.datamodule.api.SerializedData;
 import com.oop.datamodule.api.StorageInitializer;
 import com.oop.datamodule.universal.model.UniversalBodyModel;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import lombok.Getter;
-import lombok.Setter;
 
 @Getter
 public class Object implements UniversalBodyModel {
@@ -39,7 +40,8 @@ public class Object implements UniversalBodyModel {
 
   @Override
   public void deserialize(SerializedData data) {
-    System.out.println(StorageInitializer.getInstance().getPrettyfiedGson().toJson(data.getJsonElement()));
+    System.out.println(
+        StorageInitializer.getInstance().getPrettyfiedGson().toJson(data.getJsonElement()));
     this.uuid = data.applyAs("uuid", UUID.class);
     this.coins = data.applyAs("coins", int.class);
     this.object = data.applyAs("sub", SubObject.class, SubObject::new);

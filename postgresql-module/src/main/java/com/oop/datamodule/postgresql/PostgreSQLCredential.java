@@ -1,7 +1,6 @@
 package com.oop.datamodule.postgresql;
 
 import com.oop.datamodule.commonsql.database.SqlCredential;
-import java.sql.Connection;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;

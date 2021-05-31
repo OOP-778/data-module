@@ -3,22 +3,26 @@ package com.oop.datamodule.universal;
 import com.oop.datamodule.api.StorageRegistry;
 import com.oop.datamodule.api.storage.Storage;
 import com.oop.datamodule.universal.model.UniversalBodyModel;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NonNull;
+
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.NonNull;
 
 public abstract class UniversalStorage<T extends UniversalBodyModel> extends Storage<T> {
 
   @Getter(value = AccessLevel.PACKAGE)
   private final Consumer<T> adder = this::onAdd;
+
   @Getter(value = AccessLevel.PACKAGE)
   private final Consumer<T> remover = this::onRemove;
+
   @Getter(value = AccessLevel.PACKAGE)
   private final Supplier<Map<String, Class<T>>> variantsSupplier = this::getVariants;
+
   @Getter private final Linker<T> linker = new Linker<>(this);
   @Getter private Storage<T> currentImplementation;
 

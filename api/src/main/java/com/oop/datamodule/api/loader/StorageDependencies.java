@@ -1,9 +1,10 @@
 package com.oop.datamodule.api.loader;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import lombok.Getter;
 
 @Getter
 public class StorageDependencies {

@@ -1,10 +1,11 @@
 package com.oop.datamodule.api.converter;
 
+import lombok.SneakyThrows;
+
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.util.List;
 import java.util.function.Consumer;
-import lombok.SneakyThrows;
 
 public class BytesWriter {
   private ByteArrayOutputStream arrayOutputStream;

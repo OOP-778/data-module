@@ -1,8 +1,8 @@
 package com.oop.datamodule.api.loader.logging;
 
-import static java.util.Objects.requireNonNull;
-
 import com.oop.datamodule.api.loader.logging.adapters.LogAdapter;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * A logging wrapper that logs to a log adapter and can be configured to filter log messages by

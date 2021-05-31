@@ -2,6 +2,7 @@ package com.oop.datamodule.testing;
 
 import com.oop.datamodule.api.SerializableObject;
 import com.oop.datamodule.api.SerializedData;
+
 import java.util.concurrent.ThreadLocalRandom;
 
 public class SubObject implements SerializableObject {

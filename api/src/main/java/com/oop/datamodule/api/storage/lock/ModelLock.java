@@ -1,9 +1,10 @@
 package com.oop.datamodule.api.storage.lock;
 
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Consumer;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 
 @RequiredArgsConstructor
 public class ModelLock<T> {

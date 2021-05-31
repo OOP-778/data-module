@@ -1,10 +1,11 @@
 package com.oop.datamodule.api.loader.logging.adapters;
 
-import static java.util.Objects.requireNonNull;
-
 import com.oop.datamodule.api.loader.logging.LogLevel;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import static java.util.Objects.requireNonNull;
 
 /** Logging adapter that logs to a JDK logger. */
 public class JDKLogAdapter implements LogAdapter {

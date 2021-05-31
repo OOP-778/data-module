@@ -8,9 +8,8 @@ import com.oop.datamodule.universal.provider.StorageProvider;
 
 public class H2Provider implements StorageProvider<H2Database> {
 
-    @Override
-    public <B extends UniversalBodyModel> Storage<B> provide(Linker<B> linker,
-        H2Database settings) {
-        return new SQLStorageImpl<>(settings, linker);
-    }
+  @Override
+  public <B extends UniversalBodyModel> Storage<B> provide(Linker<B> linker, H2Database settings) {
+    return new SQLStorageImpl<>(settings, linker);
+  }
 }

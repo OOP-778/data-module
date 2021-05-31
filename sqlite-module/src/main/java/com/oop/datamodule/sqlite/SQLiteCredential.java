@@ -1,10 +1,10 @@
 package com.oop.datamodule.sqlite;
 
 import com.oop.datamodule.commonsql.database.SqlCredential;
-import java.io.File;
-import java.sql.Connection;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+
+import java.io.File;
 
 @Accessors(chain = true, fluent = true)
 @Setter

@@ -8,18 +8,13 @@ import com.oop.datamodule.api.loader.LibraryManager;
 import com.oop.datamodule.api.loader.StorageDependencies;
 import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.api.util.Preconditions;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
+
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class StorageInitializer {
   private static StorageInitializer instance;
@@ -29,6 +24,7 @@ public class StorageInitializer {
   private Consumer<GsonBuilder> onBuild;
   @Getter private Consumer<Throwable> errorHandler;
   private Gson gson;
+
   private StorageInitializer() {}
 
   public static StorageInitializer getInstance() {
