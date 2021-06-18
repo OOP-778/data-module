@@ -26,7 +26,7 @@ public class StorageExporter {
   }
 
   public StorageExporter(StorageRegistry registry) {
-    this.storageList.addAll(registry.getStorages());
+    this.storageList.addAll(registry.getStorageList());
   }
 
   @SneakyThrows
@@ -34,7 +34,6 @@ public class StorageExporter {
     File exportFile = new File(directory, name + ".datapack");
 
     if (!directory.exists()) directory.mkdirs();
-
     if (!exportFile.exists()) exportFile.delete();
 
     // Variant Name ~ 4 bytes

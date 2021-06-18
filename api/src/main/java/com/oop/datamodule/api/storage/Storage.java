@@ -11,6 +11,7 @@ import com.oop.datamodule.api.util.Loadable;
 import com.oop.datamodule.api.util.Saveable;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.SneakyThrows;
 
 import java.lang.reflect.Constructor;
 import java.util.*;
@@ -63,7 +64,6 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
   }
 
   public void addVariant(String variant, Class<T> clazz) {
-    getConstructor(clazz);
     variants.put(variant, clazz);
   }
 
@@ -126,20 +126,23 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
     dataCache.remove(object.getKey());
   }
 
-  protected <B extends T> Constructor<B> getConstructor(Class<B> clazz) {
-    return (Constructor<B>)
-        constructorMap.computeIfAbsent(
-            clazz,
-            key -> {
-              try {
-                Constructor<B> constructor = clazz.getDeclaredConstructor();
-                constructor.setAccessible(true);
-                return constructor;
-              } catch (Exception exception) {
-                throw new IllegalStateException(
-                    "Failed to find empty constructor for " + clazz.getSimpleName());
-              }
-            });
+  @SneakyThrows
+  public <B extends T> B construct(Class<B> clazz) {
+    return (B)
+        constructorMap
+            .computeIfAbsent(
+                clazz,
+                key -> {
+                  try {
+                    Constructor<B> constructor = clazz.getDeclaredConstructor();
+                    constructor.setAccessible(true);
+                    return constructor;
+                  } catch (Exception exception) {
+                    throw new IllegalStateException(
+                        "Failed to find empty constructor for " + clazz);
+                  }
+                })
+            .newInstance();
   }
 
   public String findVariantNameFor(Class<?> clazz) {
@@ -149,5 +152,9 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
 
     throw new IllegalStateException(
         "Failed to find registered variant for " + clazz.getSimpleName());
+  }
+
+  protected void handleError(Throwable throwable) {
+    throw new IllegalStateException("Error happened on storage " + getClass() + " thread: " + Thread.currentThread().getName(), throwable);
   }
 }

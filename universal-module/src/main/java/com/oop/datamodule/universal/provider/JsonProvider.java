@@ -56,5 +56,20 @@ public class JsonProvider implements StorageProvider<File> {
     protected List<Consumer<Storage<T>>> getOnLoad() {
       return linker.getOnLoad();
     }
+
+    @Override
+    public <B extends T> B construct(Class<B> clazz) {
+      return linker.construct(clazz);
+    }
+
+    @Override
+    public String findVariantNameFor(Class<?> clazz) {
+      return linker.findVariantNameFor(clazz);
+    }
+
+    @Override
+    protected void handleError(Throwable throwable) {
+      linker.handleError(throwable);
+    }
   }
 }

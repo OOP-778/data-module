@@ -16,7 +16,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Constructor;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
@@ -125,14 +124,12 @@ public abstract class JsonStorage<T extends ModelBody> extends Storage<T> {
                               "Failed to find type in serialized data. Data is outdated!");
 
                         Class<? extends T> clazz = getVariants().get(type.get().applyAs());
-                        Constructor<? extends T> constructor =
-                            getConstructor(
+                        T object =
+                            construct(
                                 Objects.requireNonNull(
                                     clazz,
                                     "Failed to find clazz for serialized type: "
                                         + type.get().applyAs()));
-
-                        T object = constructor.newInstance();
                         object.deserialize(data);
 
                         loadedData.add(new DataPair<>(object, file));

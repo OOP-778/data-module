@@ -30,4 +30,16 @@ public class Linker<B extends UniversalBodyModel> {
   public List<Consumer<Storage<B>>> getOnLoad() {
     return storage.getOnLoad();
   }
+
+  public <T extends B> T construct(Class<T> clazz) {
+    return storage.construct(clazz);
+  }
+
+  public String findVariantNameFor(Class<?> clazz) {
+    return storage.findVariantNameFor(clazz);
+  }
+
+  public void handleError(Throwable throwable) {
+    storage.handleError(throwable);
+  }
 }

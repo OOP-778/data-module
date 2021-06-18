@@ -27,11 +27,11 @@ public class StorageImporter {
   }
 
   public StorageImporter(StorageRegistry registry) {
-    this.storages.addAll(registry.getStorages());
+    this.storages.addAll(registry.getStorageList());
   }
 
   public static byte[] readAllBytes(InputStream inputStream) throws IOException {
-    final int bufLen = 4 * 0x400; //
+    final int bufLen = 4 * 0x400;
     byte[] buf = new byte[bufLen];
     int readLen;
     IOException exception = null;

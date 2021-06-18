@@ -5,11 +5,13 @@ import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoClientURI;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoDatabase;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
 @Accessors(chain = true, fluent = true)
 @Setter
+@Getter
 public class MongoCredential {
   private int port = 27017;
   private String hostname;

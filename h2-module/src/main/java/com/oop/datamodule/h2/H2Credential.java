@@ -1,6 +1,7 @@
 package com.oop.datamodule.h2;
 
 import com.oop.datamodule.commonsql.database.SqlCredential;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
@@ -8,6 +9,7 @@ import java.io.File;
 
 @Accessors(chain = true, fluent = true)
 @Setter
+@Getter
 public class H2Credential implements SqlCredential {
   private File folder;
   private String database;

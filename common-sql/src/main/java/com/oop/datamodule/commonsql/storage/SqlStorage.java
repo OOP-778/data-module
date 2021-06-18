@@ -9,7 +9,6 @@ import com.oop.datamodule.api.model.ModelCachedData;
 import com.oop.datamodule.api.storage.Storage;
 import com.oop.datamodule.api.storage.lock.ModelLock;
 import com.oop.datamodule.api.util.DataPair;
-import com.oop.datamodule.api.util.DataUtil;
 import com.oop.datamodule.api.util.job.JobsResult;
 import com.oop.datamodule.api.util.job.JobsRunner;
 import com.oop.datamodule.commonsql.database.SQLDatabase;
@@ -20,7 +19,6 @@ import com.oop.datamodule.commonsql.util.TableEditor;
 import lombok.Getter;
 import lombok.SneakyThrows;
 
-import java.lang.reflect.Constructor;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.*;
@@ -82,54 +80,69 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
               .getConnection()
               .useNonLock(
                   conn -> {
-                    for (T object : this) {
-                      acquire.addJob(
-                          new SqlJob(
-                              () -> {
-                                ModelLock<T> lock = getLock(object);
-                                if (lock.isLocked()) return;
+                    try {
+                      for (T object : this) {
+                        acquire.addJob(
+                            new SqlJob(
+                                () -> {
+                                  ModelLock<T> lock = getLock(object);
+                                  if (lock.isLocked()) return;
 
-                                lock.lockAndUse(
-                                    () -> {
-                                      try {
-                                        if (!preparedTables.contains(
-                                            findVariantNameFor(object.getClass())))
-                                          prepareTable(object);
+                                  lock.lockAndUse(
+                                      () -> {
+                                        try {
+                                          if (!preparedTables.contains(
+                                              findVariantNameFor(object.getClass())))
+                                            prepareTable(object);
 
-                                        SerializedData data = new SerializedData();
-                                        object.serialize(data);
+                                          SerializedData data = new SerializedData();
+                                          object.serialize(data);
 
-                                        JsonObject jsonObject =
-                                            data.getJsonElement().getAsJsonObject();
-                                        JsonElement[] jsonElements =
-                                            new JsonElement[object.getStructure().length];
-                                        for (int i = 0; i < object.getStructure().length; i++) {
-                                          JsonElement element =
-                                              jsonObject.get(object.getStructure()[i]);
-                                          jsonElements[i] =
-                                              Objects.requireNonNull(
-                                                  element,
-                                                  "Failed to find '"
-                                                      + object.getStructure()[i]
-                                                      + "' field inside serialized data of "
-                                                      + object.getClass().getName());
+                                          JsonObject jsonObject =
+                                              data.getJsonElement().getAsJsonObject();
+                                          JsonElement[] jsonElements =
+                                              new JsonElement[object.getStructure().length];
+                                          for (int i = 0; i < object.getStructure().length; i++) {
+                                            JsonElement element =
+                                                jsonObject.get(object.getStructure()[i]);
+                                            jsonElements[i] =
+                                                Objects.requireNonNull(
+                                                    element,
+                                                    "Failed to find '"
+                                                        + object.getStructure()[i]
+                                                        + "' field inside serialized data of "
+                                                        + object.getClass().getName());
+                                          }
+
+                                          String primaryKey = object.getKey();
+                                          if (database.isPrimaryKeyUsed(
+                                              findVariantNameFor(object.getClass()),
+                                              object.getStructure(),
+                                              primaryKey))
+                                            updateObject(object, primaryKey, jsonObject);
+                                          else insertObject(object, primaryKey, jsonObject);
+                                        } catch (Throwable throwable) {
+                                          handleError(
+                                              new IllegalStateException(
+                                                  "Failed to save object of identifier: "
+                                                      + object.getKey(),
+                                                  throwable));
                                         }
-
-                                        String primaryKey = object.getKey();
-                                        if (database.isPrimaryKeyUsed(
-                                            findVariantNameFor(object.getClass()),
-                                            object.getStructure(),
-                                            primaryKey))
-                                          updateObject(object, primaryKey, jsonObject);
-                                        else insertObject(object, primaryKey, jsonObject);
-                                      } catch (Throwable throwable) {
-                                        throwable.printStackTrace();
-                                      }
-                                    });
-                              }));
+                                      });
+                                }));
+                      }
+                    } catch (Throwable throwable) {
+                        handleError(
+                                new IllegalStateException(
+                                        "Failed to save storage",
+                                        throwable));
                     }
 
                     JobsResult jobsResult = acquire.startAndWait();
+                    for (Throwable error : jobsResult.getErrors()) {
+                      error.printStackTrace();
+                    }
+
                     if (callback != null) callback.run();
                   });
         });
@@ -149,8 +162,7 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
           JobsRunner acquire = JobsRunner.acquire();
           for (Class<? extends T> clazz : getVariants().values()) {
             try {
-              Constructor constructor = DataUtil.getConstructor(clazz);
-              T dummy = (T) constructor.newInstance();
+              T dummy = construct(clazz);
               prepareTable(dummy);
 
               List<List<DataPair<String, String>>> allValues =
@@ -160,17 +172,23 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
                 acquire.addJob(
                     new SqlJob(
                         () -> {
+                          JsonObject object = toJson(allValue);
+                          SerializedData data = new SerializedData(object);
                           try {
-                            JsonObject object = toJson(allValue);
-                            SerializedData data = new SerializedData(object);
 
-                            T t = (T) constructor.newInstance();
+                            T t = construct(clazz);
                             t.deserialize(data);
 
                             onAdd(t);
                             loadObjectCache(t.getKey(), data);
-                          } catch (Exception exception) {
-                            exception.printStackTrace();
+                          } catch (Throwable exception) {
+                            handleError(
+                                new IllegalStateException(
+                                    "Failed to deserialize "
+                                        + clazz
+                                        + " type with data: "
+                                        + data.getJsonElement(),
+                                    exception));
                           }
                         }));
               }

@@ -139,8 +139,6 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
                 // Because collection doesn't exist, we can continue our loop
                 if (variantCollection == null) continue;
 
-                Constructor<T> constructor = getConstructor(variantEntry.getValue());
-
                 try (MongoCursor<Document> cursor = variantCollection.find().iterator()) {
                   if (!cursor.hasNext()) continue;
 
@@ -150,7 +148,7 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
                           () -> {
                             SerializedData data = fromDocument(next);
                             try {
-                              T object = constructor.newInstance();
+                              T object = construct(variantEntry.getValue());
                               object.deserialize(data);
 
                               onAdd(object);
