@@ -9,6 +9,7 @@ import lombok.NonNull;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -43,24 +44,42 @@ public abstract class UniversalStorage<T extends UniversalBodyModel> extends Sto
     return this;
   }
 
+  protected void ensureImplementationIsFound() {
+    Objects.requireNonNull(currentImplementation, "Current implementation is not found!");
+  }
+
   @Override
   public void save(T object, boolean async, Runnable callback) {
+    ensureImplementationIsFound();
     currentImplementation.save(object, async, callback);
   }
 
   @Override
   public void load(boolean async, Runnable callback) {
+    ensureImplementationIsFound();
     currentImplementation.load(async, callback);
   }
 
   @Override
   public void save(boolean async, Runnable callback) {
+    ensureImplementationIsFound();
     currentImplementation.save(async, callback);
   }
 
   @Override
   public void remove(T object) {
+    ensureImplementationIsFound();
     currentImplementation.remove(object);
+  }
+
+  @Override
+  protected void handleError(Throwable throwable) {
+    super.handleError(throwable);
+  }
+
+  @Override
+  public String findVariantNameFor(Class<?> clazz) {
+    return super.findVariantNameFor(clazz);
   }
 
   @Override
