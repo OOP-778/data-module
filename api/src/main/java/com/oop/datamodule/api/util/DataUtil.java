@@ -59,22 +59,33 @@ public class DataUtil {
   }
 
   public static JsonElement wrap(Object object) {
-    if (object == null) return JsonNull.INSTANCE;
+    if (object == null) {
+      return JsonNull.INSTANCE;
+    }
 
-    if (DataUtil.isPrimitive(object.getClass())) return DataUtil.primitiveToString(object);
-    else if (object instanceof SerializableObject) {
+    // If primitive just convert to string
+    if (DataUtil.isPrimitive(object.getClass())) {
+      return DataUtil.primitiveToString(object);
+    }
+
+    // If implements SerializableObject, serialize
+    if (object instanceof SerializableObject) {
       SerializedData serializedData = new SerializedData();
       ((SerializableObject) object).serialize(serializedData);
 
       return serializedData.getJsonElement();
+    }
 
-    } else if (object instanceof Collection) {
+    // If is collection
+    if (object instanceof Collection) {
       JsonArray array = new JsonArray();
       for (Object listObject : (Collection) object) array.add(wrap(listObject));
 
       return array;
+    }
 
-    } else if (object instanceof Map) {
+    // If is map
+    if (object instanceof Map) {
       Map map = (Map) object;
       JsonArray array = new JsonArray();
       map.forEach(
@@ -85,16 +96,20 @@ public class DataUtil {
             array.add(jsonObject);
           });
       return array;
-
-    } else if (object.getClass().isEnum()) {
-      return new JsonPrimitive(((Enum) object).name());
-
-    } else {
-      Optional<? extends StorageInitializer.AdapterObject> adapter =
-          StorageInitializer.getInstance().findAdapter(object.getClass());
-      if (adapter.isPresent()) return adapter.get().getAdapter().toJsonTree(object);
-      else return StorageInitializer.getInstance().getGson().toJsonTree(object);
     }
+
+    // If it's an enum
+    if (object.getClass().isEnum()) {
+      return new JsonPrimitive(((Enum) object).name());
+    }
+
+    Optional<? extends StorageInitializer.AdapterObject> adapter =
+        StorageInitializer.getInstance().findAdapter(object.getClass());
+    if (adapter.isPresent()) {
+      return adapter.get().getAdapter().toJsonTree(object);
+    }
+
+    return StorageInitializer.getInstance().getGson().toJsonTree(object);
   }
 
   public static <T> T fromElement(JsonElement element, Class<T> clazz) {
