@@ -1,25 +1,25 @@
 package com.oop.datamodule.api.util.job;
 
+import com.oop.datamodule.api.StorageInitializer;
 import lombok.SneakyThrows;
 
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class JobsRunner {
   private final Object lock = true;
 
-  private final ExecutorService executor;
   private final Set<NativeJob> jobs = ConcurrentHashMap.newKeySet();
   private final CompletableFuture<JobsResult> completionFuture = new CompletableFuture<>();
   private JobsResult result;
 
-  public JobsRunner(ExecutorService executor) {
-    this.executor = executor;
-  }
+  protected JobsRunner() {}
 
   public static JobsRunner acquire() {
-    return new JobsRunner(Executors.newCachedThreadPool());
+    return new JobsRunner();
   }
 
   @SneakyThrows
@@ -34,9 +34,6 @@ public class JobsRunner {
 
       if (jobs.isEmpty()) {
         completionFuture.complete(result);
-
-        executor.shutdownNow();
-        executor.awaitTermination(10, TimeUnit.SECONDS);
       }
     }
   }
@@ -48,15 +45,20 @@ public class JobsRunner {
   }
 
   public void startAndForget() {
-    for (NativeJob job : jobs) executor.execute(job);
+    for (NativeJob job : jobs) {
+      StorageInitializer.getInstance().getRunner(true).accept(job);
+    }
   }
 
   @SneakyThrows
   public JobsResult startAndWait() {
     if (jobs.isEmpty()) return new JobsResult();
 
-    for (NativeJob job : jobs) executor.submit(job);
-    return completionFuture.get(5, TimeUnit.MINUTES);
+    for (NativeJob job : jobs) {
+      StorageInitializer.getInstance().getRunner(true).accept(job);
+    }
+
+    return completionFuture.get(3, TimeUnit.MINUTES);
   }
 
   protected static class NativeJob extends Job {
