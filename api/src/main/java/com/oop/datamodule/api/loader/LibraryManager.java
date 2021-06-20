@@ -5,6 +5,7 @@ import com.oop.datamodule.api.loader.logging.Logger;
 import com.oop.datamodule.api.loader.logging.adapters.LogAdapter;
 import com.oop.datamodule.api.loader.relocation.Relocation;
 import com.oop.datamodule.api.loader.relocation.RelocationHelper;
+import lombok.SneakyThrows;
 
 import java.io.*;
 import java.net.*;
@@ -42,8 +43,12 @@ public abstract class LibraryManager {
   /** Maven repositories used to resolve artifacts */
   private final List<String> repositories = new LinkedList<>();
 
+  private final List<URL> loadedLibraries = new LinkedList<>();
+
   /** Lazily-initialized relocation helper that uses reflection to call into Luck's Jar Relocator */
   private RelocationHelper relocator;
+
+  private URLClassLoader loader;
 
   /**
    * Creates a new library manager.
@@ -55,13 +60,6 @@ public abstract class LibraryManager {
     logger = new Logger(requireNonNull(logAdapter, "logAdapter"));
     saveDirectory = requireNonNull(dataDirectory, "dataDirectory").toAbsolutePath().resolve("lib");
   }
-
-  /**
-   * Adds a file to the plugin's classpath.
-   *
-   * @param file the file to add
-   */
-  protected abstract void addToClasspath(Path file);
 
   /**
    * Gets the logging level for this library manager.
@@ -348,12 +346,17 @@ public abstract class LibraryManager {
    * @param library the library to load
    * @see #downloadLibrary(Library)
    */
+  @SneakyThrows
   public void loadLibrary(Library library) {
     Path file = downloadLibrary(requireNonNull(library, "library"));
     if (library.hasRelocations()) {
       file = relocate(file, library.getRelocatedPath(), library.getRelocations());
     }
 
-    addToClasspath(file);
+    loadedLibraries.add(file.toUri().toURL());
+  }
+
+  public void lock(ClassLoader parentClassLoader) {
+    this.loader = new URLClassLoader(loadedLibraries.toArray(new URL[0]), parentClassLoader);
   }
 }

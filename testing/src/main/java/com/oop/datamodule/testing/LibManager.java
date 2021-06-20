@@ -16,7 +16,4 @@ public class LibManager extends LibraryManager {
   protected LibManager(LogAdapter logAdapter, Path dataDirectory) {
     super(logAdapter, dataDirectory);
   }
-
-  @Override
-  protected void addToClasspath(Path file) {}
 }

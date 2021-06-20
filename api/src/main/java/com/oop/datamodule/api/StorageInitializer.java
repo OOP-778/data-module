@@ -81,6 +81,8 @@ public class StorageInitializer {
     for (String repo : repos) libraryManager.addRepository(repo);
 
     for (Library library : libraries) libraryManager.loadLibrary(library);
+
+    libraryManager.lock(this.getClass().getClassLoader());
   }
 
   /**
