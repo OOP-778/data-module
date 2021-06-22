@@ -1,5 +1,4 @@
 dependencies {
-    implementation(project(":universal-module"))
     implementation(project(":api"))
     implementation(project(":sqlite-module"))
     implementation(project(":mysql-module"))
