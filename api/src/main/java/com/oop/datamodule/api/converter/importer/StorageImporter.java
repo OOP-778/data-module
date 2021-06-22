@@ -81,7 +81,7 @@ public class StorageImporter {
 
         Class<ModelBody> modelBodyClass = null;
         for (Storage<? extends ModelBody> storage : storages) {
-          modelBodyClass = (Class<ModelBody>) storage.getVariants().get(key);
+          modelBodyClass = (Class<ModelBody>) storage.getTypes().get(key);
           if (modelBodyClass != null) break;
         }
 

@@ -24,7 +24,7 @@ public abstract class HikariCPDatabase extends SQLDatabase {
 
   @Override
   public void shutdown() {
-    if (dbSource != null) dbSource.close();
+    dbSource.close();
   }
 
   @Override

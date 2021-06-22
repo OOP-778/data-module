@@ -36,7 +36,7 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
   @Getter(AccessLevel.PROTECTED)
   private final List<Consumer<Storage<T>>> onLoad = new LinkedList<>();
 
-  @Getter private final Map<String, Class<T>> variants = new HashMap<>();
+  @Getter private final Map<String, Class<T>> types = new HashMap<>();
 
   public Storage(StorageRegistry storageRegistry, boolean register) {
     if (register && storageRegistry != null) storageRegistry.registerStorage(this);
@@ -63,8 +63,13 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
     onRemove(object);
   }
 
+  @Deprecated
   public void addVariant(String variant, Class<T> clazz) {
-    variants.put(variant, clazz);
+    types.put(variant, clazz);
+  }
+
+  public void registerType(Class<T> type, String name) {
+    types.put(name, type);
   }
 
   public abstract void save(T object, boolean async, Runnable callback);
@@ -77,8 +82,8 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
 
   public abstract Stream<T> stream();
 
-  public boolean accepts(Class clazz) {
-    return variants.values().stream().anyMatch(clazz::isAssignableFrom);
+  public boolean accepts(Class<?> clazz) {
+    return types.values().stream().anyMatch(clazz::isAssignableFrom);
   }
 
   public void onLoad(Consumer<Storage<T>> onLoad) {
@@ -146,7 +151,7 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
   }
 
   public String findVariantNameFor(Class<?> clazz) {
-    for (Map.Entry<String, Class<T>> stringClassEntry : getVariants().entrySet()) {
+    for (Map.Entry<String, Class<T>> stringClassEntry : getTypes().entrySet()) {
       if (stringClassEntry.getValue() == clazz) return stringClassEntry.getKey();
     }
 

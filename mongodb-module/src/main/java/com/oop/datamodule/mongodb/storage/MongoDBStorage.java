@@ -20,7 +20,6 @@ import lombok.NonNull;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -127,7 +126,7 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
             () -> {
               JobsRunner acquire = JobsRunner.acquire();
 
-              for (Map.Entry<String, Class<T>> variantEntry : getVariants().entrySet()) {
+              for (Map.Entry<String, Class<T>> variantEntry : getTypes().entrySet()) {
                 String key = variantEntry.getKey();
                 MongoCollection<Document> variantCollection = null;
 

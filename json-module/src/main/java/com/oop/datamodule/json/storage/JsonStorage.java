@@ -94,7 +94,7 @@ public abstract class JsonStorage<T extends ModelBody> extends Storage<T> {
           Set<DataPair<T, File>> loadedData = ConcurrentHashMap.newKeySet();
 
           JobsRunner acquire = JobsRunner.acquire();
-          for (String s : getVariants().keySet()) {
+          for (String s : getTypes().keySet()) {
             File variantDirectory = new File(directory + "/" + s);
             if (!variantDirectory.exists()) variantDirectory.mkdirs();
 
@@ -123,7 +123,7 @@ public abstract class JsonStorage<T extends ModelBody> extends Storage<T> {
                           throw new IllegalAccessException(
                               "Failed to find type in serialized data. Data is outdated!");
 
-                        Class<? extends T> clazz = getVariants().get(type.get().applyAs());
+                        Class<? extends T> clazz = getTypes().get(type.get().applyAs());
                         T object =
                             construct(
                                 Objects.requireNonNull(

@@ -160,7 +160,7 @@ public abstract class SqlStorage<T extends SqlModelBody> extends Storage<T> {
     runner.accept(
         () -> {
           JobsRunner acquire = JobsRunner.acquire();
-          for (Class<? extends T> clazz : getVariants().values()) {
+          for (Class<? extends T> clazz : getTypes().values()) {
             try {
               T dummy = construct(clazz);
               prepareTable(dummy);

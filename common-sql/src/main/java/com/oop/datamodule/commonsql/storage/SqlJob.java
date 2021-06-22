@@ -3,7 +3,6 @@ package com.oop.datamodule.commonsql.storage;
 import com.oop.datamodule.api.util.job.Job;
 
 public class SqlJob extends Job {
-
   private final Runnable runnable;
 
   protected SqlJob(Runnable runnable) {
