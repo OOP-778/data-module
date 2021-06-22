@@ -1,18 +1,17 @@
 package com.oop.datamodule.commonsql.util;
 
-import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.commonsql.database.SQLDatabase;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import static com.oop.datamodule.commonsql.util.SqlUtil.escapeColumn;
 
 public class TableCreator {
   private final SQLDatabase database;
-  private final List<DataPair<String, String>> columns = new LinkedList<>();
+  private final Map<String, String> columnMap = new LinkedHashMap<>();
   private String name;
-  private DataPair<String, String> primaryKey;
+  private String primaryKey;
 
   public TableCreator(SQLDatabase database) {
     this.database = database;
@@ -28,16 +27,12 @@ public class TableCreator {
   }
 
   public TableCreator addColumn(String columnName, String columnType) {
-    columns.add(new DataPair<>(columnName, columnType));
+    columnMap.put(columnName, columnType);
     return this;
   }
 
-  public TableCreator primaryKey(String column, Column columnType) {
-    return primaryKey(column, columnType.getSql());
-  }
-
-  public TableCreator primaryKey(String column, String columnType) {
-    primaryKey = new DataPair<>(column, columnType);
+  public TableCreator primaryKey(String column) {
+    this.primaryKey = column;
     return this;
   }
 
@@ -46,22 +41,20 @@ public class TableCreator {
     queryBuilder.append("CREATE TABLE IF NOT EXISTS ").append(name).append(" (");
 
     if (primaryKey != null) {
+      String sqlType = columnMap.get(primaryKey);
       if (database.getType().equalsIgnoreCase("SQLITE")) {
-        queryBuilder
-            .append(primaryKey.getKey())
-            .append(" ")
-            .append(primaryKey.getValue())
-            .append(" PRIMARY KEY, ");
+        queryBuilder.append(primaryKey).append(" ").append(sqlType).append(" PRIMARY KEY, ");
 
       } else
         queryBuilder
-            .append(escapeColumn(primaryKey.getKey(), database))
-            .append(" VARCHAR(255)")
+            .append(escapeColumn(primaryKey, database))
+            .append(" ")
+            .append(sqlType)
             .append(", ");
     }
 
     boolean first = true;
-    for (DataPair<String, String> columnPair : columns) {
+    for (Map.Entry<String, String> columnPair : columnMap.entrySet()) {
       if (first) {
         queryBuilder
             .append(escapeColumn(columnPair.getKey(), database))
@@ -78,7 +71,7 @@ public class TableCreator {
     }
 
     if (primaryKey != null && !(database.getType().equalsIgnoreCase("SQLITE")))
-      queryBuilder.append(", PRIMARY KEY (").append(primaryKey.getKey()).append(")");
+      queryBuilder.append(", PRIMARY KEY (").append(primaryKey).append(")");
 
     queryBuilder.append(")");
     database.execute(queryBuilder.toString());
