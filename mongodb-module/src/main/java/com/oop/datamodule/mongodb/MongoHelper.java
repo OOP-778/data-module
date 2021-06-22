@@ -12,11 +12,9 @@ import java.util.Map;
 import java.util.regex.Pattern;
 
 public class MongoHelper {
-  private static final Pattern QUOTE_REGEX = Pattern.compile("\"");
   private static final Function<String, String> replacer =
       in -> {
         if (in.startsWith("\"")) in = in.substring(1);
-
         if (in.endsWith("\"")) in = in.substring(0, in.length() - 1);
 
         return in;
@@ -109,6 +107,10 @@ public class MongoHelper {
     }
 
     return new JsonPrimitive(convertBsonPrimitiveToJson(value));
+  }
+
+  public static String valueOf(SerializedData serializedData) {
+    return replacer.apply(serializedData.getJsonElement().toString());
   }
 
   public static void appendBson(Document document, String key, JsonElement element) {
