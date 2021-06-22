@@ -164,4 +164,21 @@ public class SerializedData {
   public <T> T applyAs(String field) {
     return (T) getChildren(field).map(applyAs()).orElse(null);
   }
+
+  public boolean isEmpty() {
+    if (jsonElement.isJsonObject()) {
+      return jsonElement.getAsJsonObject().size() == 0;
+    }
+
+    if (jsonElement.isJsonArray()) {
+      return jsonElement.getAsJsonArray().size() == 0;
+    }
+
+    return false;
+  }
+
+  @Override
+  public String toString() {
+    return jsonElement.toString();
+  }
 }
