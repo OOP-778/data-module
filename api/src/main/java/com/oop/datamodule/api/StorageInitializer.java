@@ -130,8 +130,7 @@ public class StorageInitializer {
   }
 
   public Consumer<Runnable> getRunner(boolean async) {
-    Consumer<Runnable> runner = async ? asyncRunner : syncRunner;
-    return runner;
+    return async ? asyncRunner : syncRunner;
   }
 
   @Getter
