@@ -12,4 +12,14 @@ public interface KeyRegistry {
 
   /** Get PropertyKey from a string, will throw errors if key is incorrect */
   PropertyKey getKey(String value);
+
+  /**
+   * Get optional property key
+   */
+  Optional<PropertyKey> getOptionalKey(String key);
+
+  /**
+   * Get key registry from an key of the registry
+   */
+  Optional<KeyRegistry> getRegistry(String key);
 }

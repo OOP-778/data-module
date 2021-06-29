@@ -1,4 +1,4 @@
-package com.oop.datamodule.property.key;
+package com.oop.datamodule.property.impl.key;
 
 import com.oop.datamodule.api.util.Preconditions;
 import com.oop.datamodule.property.api.key.KeyRegistry;
@@ -38,8 +38,7 @@ public class ImplKeyRegistry implements KeyRegistry {
     return Optional.ofNullable(key);
   }
 
-  @Override
-  public PropertyKey getKey(String value) {
+  protected PropertyKey _getKey(String value, boolean throwErrors) {
     final String[] split = value.split(":");
     final Queue<String> parents = new LinkedList<>(Arrays.asList(split[0].split("_")));
 
@@ -49,20 +48,36 @@ public class ImplKeyRegistry implements KeyRegistry {
         return new ImplPropertyKey(this, split[0]).apply(key -> this.keys.put(split[0], key));
       }
 
+      if (!throwErrors) return propertyKey;
       return Objects.requireNonNull(
-          propertyKey,
-          "Failed to find key in registry: "
-              + (key == null ? "default" : key)
-              + " of key: "
-              + split[0]);
+              propertyKey,
+              "Failed to find key in registry: "
+                      + (key == null ? "default" : key)
+                      + " of key: "
+                      + split[0]);
     }
 
     Preconditions.checkArgument(split.length == 2, "KEY is invalid! The format is key_child:value");
     Optional<ImplKeyRegistry> implKeyRegistry = _getKeyRegistry(parents, isMutable);
     Preconditions.checkArgument(
-        implKeyRegistry.isPresent(), "KEY is invalid! Failed to find parents " + parents.peek());
+            implKeyRegistry.isPresent(), "KEY is invalid! Failed to find parents " + parents.peek());
 
     return implKeyRegistry.get().getKey(split[1]);
+  }
+
+  @Override
+  public PropertyKey getKey(String value) {
+    return _getKey(value, true);
+  }
+
+  @Override
+  public Optional<PropertyKey> getOptionalKey(String key) {
+    return Optional.ofNullable(_getKey(key, false));
+  }
+
+  @Override
+  public Optional<KeyRegistry> getRegistry(String key) {
+    return Optional.empty();
   }
 
   protected Optional<ImplKeyRegistry> _getKeyRegistry(

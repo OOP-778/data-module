@@ -1,7 +1,7 @@
-package com.oop.datamodule.property;
+package com.oop.datamodule.property.test;
 
 import com.oop.datamodule.property.api.Property;
-import com.oop.datamodule.property.key.ImplKeyRegistry;
+import com.oop.datamodule.property.impl.key.ImplKeyRegistry;
 
 public class Testing {
   public static void main(String[] args) {

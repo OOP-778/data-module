@@ -1,4 +1,4 @@
-package com.oop.datamodule.property.key;
+package com.oop.datamodule.property.impl.key;
 
 import com.oop.datamodule.property.api.key.KeyRegistry;
 import com.oop.datamodule.property.api.key.PropertyKey;

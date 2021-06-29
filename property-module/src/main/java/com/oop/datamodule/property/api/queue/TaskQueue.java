@@ -10,6 +10,7 @@ import java.util.function.Function;
 
 /**
  * This queue holds all the tasks of an property
+ * This is used when an value is not loaded and it calls :)
  */
 public interface TaskQueue<T> extends Applyable<TaskQueue<T>>, PropertyHolder<T> {
 
