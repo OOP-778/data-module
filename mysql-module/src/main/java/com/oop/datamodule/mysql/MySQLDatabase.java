@@ -4,6 +4,8 @@ import com.oop.datamodule.api.util.DataPair;
 import com.oop.datamodule.commonsql.database.HikariCPDatabase;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import com.zaxxer.hikari.pool.HikariPool;
+import org.slf4j.LoggerFactory;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -18,8 +20,6 @@ public class MySQLDatabase extends HikariCPDatabase {
 
     config.setUsername(props.username());
     config.setPassword(props.password());
-
-    config.setJdbcUrl(props.toURL());
 
     config.addDataSourceProperty("cachePrepStmts", true);
     config.addDataSourceProperty("prepStmtCacheSize", 250);

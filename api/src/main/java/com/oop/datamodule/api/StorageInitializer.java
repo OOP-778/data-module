@@ -79,10 +79,14 @@ public class StorageInitializer {
             .collect(Collectors.toCollection(HashSet::new));
 
     for (String repo : repos) libraryManager.addRepository(repo);
-
     for (Library library : libraries) libraryManager.loadLibrary(library);
 
-    libraryManager.lock(this.getClass().getClassLoader());
+    ClassLoader loader = this.getClass().getClassLoader();
+    if (loader.getParent() != null) {
+      loader = loader.getParent();
+    }
+
+    libraryManager.lock(loader);
   }
 
   /**

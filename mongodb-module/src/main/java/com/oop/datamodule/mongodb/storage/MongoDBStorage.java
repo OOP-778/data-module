@@ -20,7 +20,6 @@ import lombok.NonNull;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 
-import java.lang.reflect.Constructor;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -140,23 +139,27 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
                 if (variantCollection == null) continue;
 
                 try (MongoCursor<Document> cursor = variantCollection.find().iterator()) {
-                  if (!cursor.hasNext()) continue;
+                  while (cursor.hasNext()) {
+                    Document next = cursor.next();
+                    acquire.addJob(
+                        new MongoJob(
+                            () -> {
+                              SerializedData data = fromDocument(next);
+                              try {
+                                T object = construct(variantEntry.getValue());
+                                object.deserialize(data);
 
-                  Document next = cursor.next();
-                  acquire.addJob(
-                      new MongoJob(
-                          () -> {
-                            SerializedData data = fromDocument(next);
-                            try {
-                              T object = construct(variantEntry.getValue());
-                              object.deserialize(data);
-
-                              onAdd(object);
-                              loadObjectCache(object.getKey(), data);
-                            } catch (Throwable throwable) {
-                              StorageInitializer.getInstance().getErrorHandler().accept(throwable);
-                            }
-                          }));
+                                onAdd(object);
+                                loadObjectCache(object.getKey(), data);
+                              } catch (Throwable throwable) {
+                                StorageInitializer.getInstance()
+                                    .getErrorHandler()
+                                    .accept(throwable);
+                              }
+                            }));
+                  }
+                } catch (Throwable throwable) {
+                  StorageInitializer.getInstance().getErrorHandler().accept(throwable);
                 }
               }
 

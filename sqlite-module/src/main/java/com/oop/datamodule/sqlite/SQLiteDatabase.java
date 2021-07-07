@@ -241,7 +241,9 @@ public class SQLiteDatabase extends SQLDatabase {
   @Override
   @SneakyThrows
   public void shutdown() {
-    connection.close();
+    if (connection != null) {
+      connection.close();
+    }
   }
 
   @Getter

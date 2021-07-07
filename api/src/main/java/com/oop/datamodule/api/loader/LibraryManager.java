@@ -1,5 +1,7 @@
 package com.oop.datamodule.api.loader;
 
+import com.oop.datamodule.api.loader.classloader.IsolatedClassLoader;
+import com.oop.datamodule.api.loader.classloader.URLClassLoaderHelper;
 import com.oop.datamodule.api.loader.logging.LogLevel;
 import com.oop.datamodule.api.loader.logging.Logger;
 import com.oop.datamodule.api.loader.logging.adapters.LogAdapter;
@@ -357,6 +359,10 @@ public abstract class LibraryManager {
   }
 
   public void lock(ClassLoader parentClassLoader) {
-    this.loader = new URLClassLoader(loadedLibraries.toArray(new URL[0]), parentClassLoader);
+    URLClassLoaderHelper urlClassLoaderHelper = new URLClassLoaderHelper((URLClassLoader) parentClassLoader);
+
+    for (URL loadedLibrary : loadedLibraries) {
+      urlClassLoaderHelper.addToClasspath(loadedLibrary);
+    }
   }
 }
