@@ -41,11 +41,10 @@ public interface DatabaseHandler<S extends DatabaseStructure, T extends Database
 
     private @NonNull Map<String, SerializedData> updatingColumns;
 
-    @Builder
     public UpdateData(
-        @NonNull String keyIdentifier,
-        @NonNull SerializedData objectThatIdentifies,
-        @NonNull Map<String, SerializedData> updatingColumns) {
+        String keyIdentifier,
+        SerializedData objectThatIdentifies,
+        Map<String, SerializedData> updatingColumns) {
       super(keyIdentifier, objectThatIdentifies);
       this.updatingColumns = updatingColumns;
     }
@@ -64,11 +63,10 @@ public interface DatabaseHandler<S extends DatabaseStructure, T extends Database
   class GrabData extends ObjectIdentifier {
     private @NonNull final String[] grabbing;
 
-    @Builder
     public GrabData(
-        @NonNull String keyIdentifier,
-        @NonNull SerializedData objectThatIdentifies,
-        @NonNull String[] grabbing) {
+        String keyIdentifier,
+        SerializedData objectThatIdentifies,
+        String[] grabbing) {
       super(keyIdentifier, objectThatIdentifies);
       this.grabbing = grabbing;
       Preconditions.checkArgument(grabbing.length != 0, "Cannot grab zero columns!");

@@ -93,7 +93,7 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
   public boolean isObjectUpdated(T object) {
     SerializedData data = new SerializedData();
     object.serialize(data);
-    return isObjectUpdated(object.getKey(), data);
+    return isObjectUpdated(object.getKey().toString(), data);
   }
 
   public boolean isObjectUpdated(String key, SerializedData data) {
@@ -118,36 +118,15 @@ public abstract class Storage<T extends ModelBody> implements Loadable, Saveable
   }
 
   protected ModelLock<T> getLock(T object) {
-    return lockMap.computeIfAbsent(object.getKey(), k -> new ModelLock<>(object));
+    return null;
   }
 
   protected void acquireAndLaterRemove(T object, Runnable runnable) {
-    if (beingRemoved.contains(object.getKey())) return;
-
-    beingRemoved.add(object.getKey());
-    runnable.run();
-    beingRemoved.remove(object.getKey());
-    lockMap.remove(object.getKey());
-    dataCache.remove(object.getKey());
   }
 
   @SneakyThrows
   public <B extends T> B construct(Class<B> clazz) {
-    return (B)
-        constructorMap
-            .computeIfAbsent(
-                clazz,
-                key -> {
-                  try {
-                    Constructor<B> constructor = clazz.getDeclaredConstructor();
-                    constructor.setAccessible(true);
-                    return constructor;
-                  } catch (Exception exception) {
-                    throw new IllegalStateException(
-                        "Failed to find empty constructor for " + clazz);
-                  }
-                })
-            .newInstance();
+    return null;
   }
 
   public String findVariantNameFor(Class<?> clazz) {

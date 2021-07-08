@@ -4,13 +4,13 @@ import java.util.LinkedHashMap;
 import java.util.UUID;
 
 /** A class which holds the properties */
-public interface PropertyHolder<T> {
-
-  /** Get object that wraps this */
-  T getWrappingObject();
+public interface PropertyHolder {
 
   /** Get storage of this holder */
-  PropertyStorage<T> storage();
+  PropertyStorage storage();
+
+  /** Set storage of this holder */
+  void storage(PropertyStorage storage);
 
   /** Get internal UUID of the object */
   UUID holderUUID();
@@ -18,6 +18,6 @@ public interface PropertyHolder<T> {
   /** Get all properties */
   LinkedHashMap<String, Property<?>> properties();
 
-  /** Save all fields */
+  /** Save all loaded fields */
   void saveAll();
 }

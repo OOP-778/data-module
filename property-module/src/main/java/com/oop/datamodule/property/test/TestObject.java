@@ -10,6 +10,7 @@ public class TestObject {
 
     public TestObject() {
         PropertyHolder propertyHolder = PropertyHelper.makePropertyHolderWithReflection(this);
+
     }
 
 }

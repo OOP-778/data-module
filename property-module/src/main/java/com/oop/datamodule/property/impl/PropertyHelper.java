@@ -16,10 +16,8 @@ public class PropertyHelper {
 
   private static final String DB_KEY = "databases";
 
-  private static final PropertyController propertyController = new PropertyController();
-
   public PropertyController propertyController() {
-    return propertyController;
+    return PropertyController.getInstance();
   }
 
   public PropertyKey key(String key) {

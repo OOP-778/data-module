@@ -1,31 +1,19 @@
 package com.oop.datamodule.property.api;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 /** This storage holds all the objects */
-public interface PropertyStorage<T> {
+public interface PropertyStorage {
 
-  /** Stream of the all objects */
-  default Stream<T> streamObjects() {
-    return streamHolders().map(PropertyHolder::getWrappingObject);
-  }
+  /** Get Internally Registered Data */
+  Map<UUID, PropertyHolder> data();
 
-  /** Unmodifiable map of holders */
-  Map<UUID, PropertyHolder<T>> holders();
+  /** Get values of the map */
+  Collection<PropertyHolder> values();
 
-  default UUID generateObjectUUID() {
-    final Map<UUID, PropertyHolder<T>> holders = holders();
+  /** Generate an UUID for an PropertyHolder */
+  UUID generateUUID();
 
-    UUID uuid;
-    while (true) {
-      uuid = UUID.randomUUID();
-      if (holders.containsKey(uuid)) continue;
-
-      return uuid;
-    }
-  }
-
-  Stream<PropertyHolder<T>> streamHolders();
 }

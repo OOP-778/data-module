@@ -52,7 +52,7 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
   }
 
   protected void _save(T object) {
-    String key = object.getKey();
+    String key = object.getKey().toString();
     String table = findVariantNameFor(object.getClass());
     ModelLock<T> lock = getLock(object);
     if (lock.isLocked()) return;
@@ -151,7 +151,7 @@ public abstract class MongoDBStorage<T extends MongoModelBody> extends Storage<T
                               object.deserialize(data);
 
                               onAdd(object);
-                              loadObjectCache(object.getKey(), data);
+                              loadObjectCache(object.getKey().toString(), data);
                             } catch (Throwable throwable) {
                               StorageInitializer.getInstance().getErrorHandler().accept(throwable);
                             }
