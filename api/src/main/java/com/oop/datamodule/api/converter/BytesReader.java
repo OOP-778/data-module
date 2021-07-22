@@ -12,8 +12,8 @@ import java.util.function.Supplier;
 @Getter
 public class BytesReader {
 
-  private ByteArrayInputStream arrayInputStream;
-  private DataInputStream inputStream;
+  private final ByteArrayInputStream arrayInputStream;
+  private final DataInputStream inputStream;
 
   public BytesReader(@NonNull byte[] data) {
     this.arrayInputStream = new ByteArrayInputStream(data);

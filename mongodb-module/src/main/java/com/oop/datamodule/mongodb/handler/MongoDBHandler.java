@@ -8,8 +8,8 @@ import com.mongodb.client.model.Indexes;
 import com.mongodb.client.model.UpdateOptions;
 import com.oop.datamodule.api.SerializedData;
 import com.oop.datamodule.api.database.DatabaseHandler;
-import com.oop.datamodule.mongodb.MongoHelper;
-import com.oop.datamodule.mongodb.structure.MongoDatabaseStructure;
+import com.oop.datamodule.api.database.DatabaseStructure;
+import com.oop.datamodule.mongodb.util.MongoHelper;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.bson.Document;
@@ -21,31 +21,27 @@ import java.util.function.BiFunction;
 import static com.mongodb.client.model.Projections.include;
 
 @RequiredArgsConstructor
-public class MongoDBHandler implements DatabaseHandler<MongoDatabaseStructure, MongoDBHandler> {
+public class MongoDBHandler implements DatabaseHandler {
 
   private final MongoDatabase database;
 
   @Override
-  public void remove(@NonNull MongoDatabaseStructure structure, @NonNull ObjectIdentifier data) {
+  public void remove(@NonNull DatabaseStructure structure, @NonNull ObjectIdentifier data) {
     consumeCollection(
-        structure.getCollectionName(),
-        (collection, $) ->
-            collection.findOneAndDelete(
-                Filters.eq(
-                    data.getKeyIdentifier(), MongoHelper.valueOf(data.getObjectThatIdentifies()))));
+        structure.modelName(), (collection, $) -> collection.findOneAndDelete(toFilter(data)));
   }
 
   @Override
-  public void updateStructure(@NonNull MongoDatabaseStructure structure) {
+  public void updateStructure(@NonNull DatabaseStructure structure) {
     consumeCollection(
-        structure.getCollectionName(),
+        structure.modelName(),
         (collection, isNew) -> {
-          if (structure.getUniqueFieldName() != null && isNew) {
-            Bson indexKey = Indexes.hashed(structure.getUniqueFieldName());
-            ListIndexesIterable<Document> indexes = collection.listIndexes();
-
+          ListIndexesIterable<Document> indexes = collection.listIndexes();
+          PRIM_LOOP:
+          for (String primaryKey : structure.primaryKeys()) {
+            Bson indexKey = Indexes.hashed(primaryKey);
             for (Document document : indexes) {
-              if (document.equals(indexKey)) return;
+              if (document.equals(indexKey)) continue PRIM_LOOP;
             }
 
             collection.createIndex(indexKey);
@@ -53,49 +49,46 @@ public class MongoDBHandler implements DatabaseHandler<MongoDatabaseStructure, M
         });
   }
 
+  protected Bson toFilter(@NonNull ObjectIdentifier identifier) {
+    return Filters.eq(
+        identifier.getKeyIdentifier(),
+        MongoHelper.JSON_TO_BSON.fromSerializedData(identifier.getObjectThatIdentifies()));
+  }
+
   @Override
-  public SerializedData grabData(
-      @NonNull MongoDatabaseStructure structure, @NonNull GrabData data) {
+  public SerializedData grabData(@NonNull DatabaseStructure structure, @NonNull GrabData data) {
     updateStructure(structure);
 
     return consumeCollectionAndReturn(
-        structure.getCollectionName(),
+        structure.modelName(),
         (collection, $) -> {
           Document first =
               collection
-                  .find(
-                      Filters.and(
-                          Filters.eq(
-                              data.getKeyIdentifier(),
-                              MongoHelper.valueOf(data.getObjectThatIdentifies())),
-                          include(data.getGrabbing())))
+                  .find(Filters.and(toFilter(data), include(data.getGrabbing())))
                   .limit(1)
                   .first();
           if (first == null) return new SerializedData();
 
-          return MongoHelper.fromDocument(first);
+          return MongoHelper.BSON_TO_JSON.fromDocument(first);
         });
   }
 
   @Override
-  public void updateOrInsertData(
-      @NonNull MongoDatabaseStructure structure, @NonNull UpdateData data) {
+  public void updateOrInsertData(@NonNull DatabaseStructure structure, @NonNull UpdateData data) {
     updateStructure(structure);
 
     consumeCollection(
-        structure.getCollectionName(),
+        structure.modelName(),
         (collection, $) -> {
-          Bson filter =
-              Filters.eq(
-                  data.getKeyIdentifier(), MongoHelper.valueOf(data.getObjectThatIdentifies()));
+          Bson filter = toFilter(data);
           Document first = collection.find(filter).limit(1).first();
           if (first == null) {
             Document updatedFields = new Document();
 
-            data.getUpdatingColumns()
+            data.getProperties()
                 .forEach(
                     (key, value) ->
-                        MongoHelper.appendBson(updatedFields, key, value.getJsonElement()));
+                        updatedFields.put(key, MongoHelper.JSON_TO_BSON.fromSerializedData(value)));
 
             // Finally update fields
             collection.updateOne(
@@ -104,32 +97,29 @@ public class MongoDBHandler implements DatabaseHandler<MongoDatabaseStructure, M
           }
 
           SerializedData oneObject = new SerializedData();
-          data.getUpdatingColumns()
+          data.getProperties()
               .forEach(
                   (key, sd) ->
                       oneObject.getJsonElement().getAsJsonObject().add(key, sd.getJsonElement()));
-          collection.insertOne(MongoHelper.fromSerializedData(oneObject));
+          collection.insertOne(MongoHelper.JSON_TO_BSON.fromSerializedData(oneObject));
         });
   }
 
   @Override
-  public boolean exists(@NonNull MongoDatabaseStructure structure, @NonNull ObjectIdentifier data) {
+  public boolean exists(@NonNull DatabaseStructure structure, @NonNull ObjectIdentifier data) {
     return consumeCollectionAndReturn(
-        structure.getCollectionName(),
-        (collection, $) ->
-            collection
-                    .find(
-                        Filters.eq(
-                            data.getKeyIdentifier(),
-                            MongoHelper.valueOf(data.getObjectThatIdentifies())))
-                    .limit(1)
-                    .first()
-                != null);
+        structure.modelName(),
+        (collection, $) -> collection.find(toFilter(data)).limit(1).first() != null);
   }
 
   @Override
   public boolean supportsPartialUpdates() {
     return true;
+  }
+
+  @Override
+  public String identifier() {
+    return "MongoDB";
   }
 
   protected <T> T consumeCollectionAndReturn(

@@ -1,25 +1,31 @@
 package com.oop.datamodule.property.api;
 
-import com.oop.datamodule.property.api.context.Contexts;
+import com.google.gson.JsonElement;
+import com.oop.datamodule.property.api.general.Applyable;
+import com.oop.datamodule.property.api.general.Identifiable;
+import com.oop.datamodule.property.api.general.Saveable;
 import com.oop.datamodule.property.api.holder.DataHolder;
 import com.oop.datamodule.property.api.holder.LoadedValue;
-import com.oop.datamodule.property.api.queue.TaskQueue;
-import com.oop.datamodule.property.api.general.Applyable;
+
+import java.util.Map;
 
 /** A database property wrapper */
-public interface Property<T> extends Applyable<Property<T>>, DataHolder<T, LoadedValue<T>> {
+public interface Property<T> extends Applyable<Property<T>>, DataHolder<T, LoadedValue<T>>, Identifiable<String> {
 
-  /** This identifier acts as a name of column */
-  String identifier();
+  /** Get holder of the property */
+  PropertyHolder holder();
 
-  /*
-  Get properties of different contexts
-  */
-  Contexts<T> contexts();
+  /** Get settings of this property */
+  Map<String, Object> getSettings();
 
-  /*
-  Get queue of tasks waiting of this property
-  */
-  TaskQueue<T> taskQueue();
+  /**
+   * Get serialized version of the property The serialized value is cached for 10 seconds in case of
+   * repeated calls
+   */
+  JsonElement serialize();
 
+  /** Save the property */
+  default void save(Saveable.SaveArgs saveArgs) {
+    holder().save(saveArgs.toBuilder().clearProperties().property(id()).build());
+  }
 }

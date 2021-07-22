@@ -1,0 +1,9 @@
+Property Holder:
+
+Type #1) ->
+    User Implemented Type
+Type #2) ->
+    Generated Type
+
+Data-Module has a heart-beat thread that updates everything aka
+~ Times out invalid properties

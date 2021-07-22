@@ -34,8 +34,8 @@ subprojects {
     }
 
     dependencies {
-        compileOnly("org.projectlombok:lombok:1.18.8")
-        annotationProcessor("org.projectlombok:lombok:1.18.8")
+        compileOnly("org.projectlombok:lombok:1.18.16")
+        annotationProcessor("org.projectlombok:lombok:1.18.16")
     }
 
     val config = props[name]
