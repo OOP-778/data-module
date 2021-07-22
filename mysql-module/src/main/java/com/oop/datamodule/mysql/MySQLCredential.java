@@ -21,14 +21,12 @@ public class MySQLCredential implements SqlCredential {
 
   public MySQLDatabase build() {
     if (mySQLDatabase != null) return mySQLDatabase;
-
     return new MySQLDatabase(this);
   }
 
   public String toURL() {
     String url = "jdbc:mysql://" + this.hostname + ":" + this.port + "/" + this.database;
-    if (useSSL) url += "?useSSL=true";
-
+    url += "?useSSL=" + useSSL;
     return url;
   }
 
