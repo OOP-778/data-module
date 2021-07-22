@@ -8,6 +8,3 @@ out/
 gradle/
 target/
 archive/
-server/
-ts-module/
-/ts-module/
