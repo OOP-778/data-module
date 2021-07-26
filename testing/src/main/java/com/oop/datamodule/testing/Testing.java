@@ -10,6 +10,7 @@ import com.oop.datamodule.h2.H2Dependencies;
 import com.oop.datamodule.universal.StorageProviders;
 import com.oop.datamodule.universal.provider.StorageProvider;
 
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
@@ -25,6 +26,7 @@ public class Testing {
             test,
             null,
             Throwable::printStackTrace,
+            (URLClassLoader) Testing.class.getClassLoader(),
             new H2Dependencies()
     );
 

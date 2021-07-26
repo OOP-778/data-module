@@ -14,7 +14,7 @@ public class URLClassLoaderHelper {
   private final URLClassLoader classLoader;
 
   /** A reflected method in {@link URLClassLoader}, when invoked adds a URL to the classpath */
-  private final Method addURLMethod;
+  private Method addURLMethod;
 
   /**
    * Creates a new URL class loader helper.
@@ -27,8 +27,12 @@ public class URLClassLoaderHelper {
     try {
       addURLMethod = URLClassLoader.class.getDeclaredMethod("addURL", URL.class);
       addURLMethod.setAccessible(true);
-    } catch (NoSuchMethodException e) {
-      throw new RuntimeException(e);
+    } catch (Throwable e) {
+      try {
+        addURLMethod = classLoader.getClass().getDeclaredMethod("addJarToClasspath", URL.class);
+      } catch (Throwable throwable) {
+        throw new IllegalStateException("Failed to do find custom class loader method 'addJarToClasspath' in " + classLoader.getClass());
+      }
     }
   }
 

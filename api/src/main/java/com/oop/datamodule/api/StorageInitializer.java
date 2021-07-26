@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NonNull;
 
+import java.net.URLClassLoader;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -23,6 +24,7 @@ public class StorageInitializer {
   private Consumer<Runnable> syncRunner = Runnable::run;
   private Consumer<GsonBuilder> onBuild;
   @Getter private Consumer<Throwable> errorHandler;
+  @Getter private ClassLoader classLoader;
   private Gson gson;
 
   private StorageInitializer() {}
@@ -49,6 +51,7 @@ public class StorageInitializer {
       @NonNull LibraryManager libraryManager,
       Consumer<GsonBuilder> onBuild,
       Consumer<Throwable> errorHandler,
+      @NonNull URLClassLoader classLoader,
       @NonNull StorageDependencies... dependencies) {
     Preconditions.checkArgument(instance == null, "Instance of StorageInitializer already exists!");
     instance = new StorageInitializer();
@@ -56,7 +59,7 @@ public class StorageInitializer {
     instance.syncRunner = syncRunner;
     instance.onBuild = onBuild;
     instance.errorHandler = errorHandler;
-    instance.loadLibraries(libraryManager, dependencies);
+    instance.loadLibraries(libraryManager, classLoader, dependencies);
 
     return new DataPair<>(instance, () -> instance = null);
   }
@@ -65,7 +68,7 @@ public class StorageInitializer {
     instance = null;
   }
 
-  private void loadLibraries(LibraryManager libraryManager, StorageDependencies... dependencies) {
+  private void loadLibraries(LibraryManager libraryManager, URLClassLoader classLoader, StorageDependencies... dependencies) {
     libraryManager.addJCenter();
 
     Set<Library> libraries =
@@ -81,12 +84,7 @@ public class StorageInitializer {
     for (String repo : repos) libraryManager.addRepository(repo);
     for (Library library : libraries) libraryManager.loadLibrary(library);
 
-    ClassLoader loader = this.getClass().getClassLoader();
-    if (loader.getParent() != null) {
-      loader = loader.getParent();
-    }
-
-    libraryManager.lock(loader);
+    libraryManager.lock(classLoader);
   }
 
   /**
