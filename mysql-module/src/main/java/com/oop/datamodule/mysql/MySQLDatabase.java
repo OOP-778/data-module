@@ -17,6 +17,7 @@ public class MySQLDatabase extends HikariCPDatabase {
     HikariConfig config = new HikariConfig();
     config.setPoolName("DM-MySQL-Pool");
     config.setDriverClassName("com.mysql.jdbc.Driver");
+    config.setJdbcUrl(props.toURL());
 
     config.setUsername(props.username());
     config.setPassword(props.password());
