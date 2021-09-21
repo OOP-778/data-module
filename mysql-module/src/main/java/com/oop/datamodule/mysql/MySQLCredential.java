@@ -16,6 +16,7 @@ public class MySQLCredential implements SqlCredential {
   private String username;
   private String password;
   private boolean useSSL;
+  private boolean allowPublicKeyRetrieval;
 
   private MySQLDatabase mySQLDatabase;
 
@@ -27,6 +28,7 @@ public class MySQLCredential implements SqlCredential {
   public String toURL() {
     String url = "jdbc:mysql://" + this.hostname + ":" + this.port + "/" + this.database;
     url += "?useSSL=" + useSSL;
+    url += "?allowPublicKeyRetrieval" + allowPublicKeyRetrieval;
     return url;
   }
 
